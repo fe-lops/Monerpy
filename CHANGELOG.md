@@ -8,6 +8,20 @@ for `0.x`, o app está em desenvolvimento e mudanças de comportamento podem aco
 
 ## [Não lançado]
 
+## [0.5.0] — 2026-10-16
+
+### Adicionado
+- E-mail com registro recusado não pode enviar nova solicitação: a tela informa que já houve um pedido e
+  orienta procurar o suporte (contato opcional via `SUPPORT_EMAIL`). E-mail já aprovado é orientado a entrar.
+- Botão **Aprovar cadastro** na aba Recusados: move o pedido para Aprovados e envia o link de criar senha.
+- Manifesto do app (`/manifest.webmanifest`): atalho na tela inicial sempre abre o Início.
+
+### Corrigido
+- Campos de texto dentro de janelas (ex.: motivo da recusa, nova categoria, filtros) perdiam o foco a
+  cada caractere digitado.
+- A introdução (saldo inicial) podia reaparecer ao abrir o app em outro aparelho; agora `/onboarding`
+  leva ao Início quando a conta já fez a configuração, e o login não retorna mais para ela.
+
 ## [0.4.1] — 2026-10-16
 
 ### Corrigido
@@ -71,7 +85,8 @@ for `0.x`, o app está em desenvolvimento e mudanças de comportamento podem aco
   exportação CSV e configurações.
 - Regras financeiras do PRD com testes; camada de dados local e Supabase (RLS).
 
-[Não lançado]: https://github.com/fe-lops/Monerpy/compare/v0.4.1...HEAD
+[Não lançado]: https://github.com/fe-lops/Monerpy/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/fe-lops/Monerpy/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/fe-lops/Monerpy/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/fe-lops/Monerpy/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/fe-lops/Monerpy/compare/v0.2.0...v0.3.0
