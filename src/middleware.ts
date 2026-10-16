@@ -1,9 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isSupabaseConfigured, SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/env";
+import { GHOST_COOKIE } from "@/lib/ghost";
 
 // Rotas acessíveis sem login. As rotas /api validam a sessão por conta própria.
-const PUBLIC = ["/login", "/registro", "/recuperar-senha", "/redefinir-senha", "/definir-senha", "/api/"];
+const PUBLIC = ["/login", "/registro", "/recuperar-senha", "/redefinir-senha", "/definir-senha", "/ghost-test-user", "/api/"];
 
 /**
  * Com o Supabase configurado: renova a sessão (cookies) e bloqueia rotas da área
@@ -11,6 +12,9 @@ const PUBLIC = ["/login", "/registro", "/recuperar-senha", "/redefinir-senha", "
  */
 export async function middleware(request: NextRequest) {
   if (!isSupabaseConfigured) return NextResponse.next();
+  // Visitante (/ghost-test-user): usa só dados de exemplo na memória do navegador, sem sessão no
+  // Supabase — o RLS impede qualquer acesso a dados reais. Basta não redirecionar para o login.
+  if (request.cookies.get(GHOST_COOKIE)?.value === "1") return NextResponse.next();
   const url = SUPABASE_URL;
   const key = SUPABASE_ANON_KEY;
 

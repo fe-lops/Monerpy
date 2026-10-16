@@ -144,7 +144,7 @@ export default function ConfiguracoesPage() {
         <Link href="/exportar" className="btn-ghost">
           Exportar meus dados (CSV)
         </Link>
-        {seedDemo && (
+        {seedDemo && repo.mode === "local" && (
           <button
             type="button"
             className="btn-ghost"
@@ -158,7 +158,7 @@ export default function ConfiguracoesPage() {
         )}
         {resetAll && (
           <button type="button" className="btn-ghost danger" onClick={() => setResetOpen(true)}>
-            Apagar todos os dados deste navegador
+            {repo.mode === "ghost" ? "Restaurar dados de exemplo" : "Apagar todos os dados deste navegador"}
           </button>
         )}
         <button
@@ -171,6 +171,7 @@ export default function ConfiguracoesPage() {
         >
           Sair
         </button>
+        {repo.mode === "ghost" && <p className="cap">Modo visitante: nada é salvo. Atualizar a página também restaura o exemplo.</p>}
         {repo.mode === "local" && (
           <p className="cap">Modo local: os dados ficam só neste navegador. Configure o Supabase para ter login, backup e acesso de outros aparelhos.</p>
         )}
