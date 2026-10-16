@@ -5,10 +5,12 @@ import { getRepo, newId, type Repo, type SessionInfo, type Snapshot } from "@/li
 import { LocalRepo } from "@/lib/data/local";
 import { todayISO } from "@/lib/domain/dates";
 import { availableBalance } from "@/lib/domain/finance";
+import { buildGroup, fixedOccurrencesToCreate, futurePendingOfGroup } from "@/lib/domain/recurrence";
+import { leaveGhostMode } from "@/lib/ghost";
 import type {
   Category,
   ISODate,
-  NewInstallmentPurchase,
+  NewTransactionGroup,
   NewTransaction,
   PaymentMethod,
   Profile,
@@ -41,7 +43,10 @@ interface DataCtx extends Partial<Snapshot> {
   reopen: (id: string) => Promise<Transaction>;
   cancel: (id: string) => Promise<Transaction>;
   restore: (id: string) => Promise<Transaction>;
-  createInstallments: (p: NewInstallmentPurchase) => Promise<Transaction[]>;
+  /** Parcelar/repetir ou fixa mensal no crédito. Gera as cobranças (lib/domain/recurrence) e salva. */
+  createGroup: (p: NewTransactionGroup) => Promise<Transaction[]>;
+  /** Encerra uma cobrança fixa mensal: não gera mais e cancela as futuras pendentes. */
+  endGroup: (groupId: string) => Promise<void>;
 
   updateProfile: (patch: Partial<Omit<Profile, "user_id">>) => Promise<void>;
   createCategory: (c: Omit<Category, "id" | "is_archived">) => Promise<Category>;
@@ -86,7 +91,15 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setStatus("anon");
         return null;
       }
-      setSnap(await repo.load());
+      let data = await repo.load();
+      // Cobranças fixas mensais: completa as que faltam até o horizonte (idempotente, em qualquer aparelho).
+      const today = todayISO(data.profile.timezone);
+      const missing = data.groups.flatMap((g) => fixedOccurrencesToCreate(g, data.transactions, today, newId, new Date().toISOString()));
+      if (missing.length) {
+        await repo.insertGenerated(missing);
+        data = await repo.load();
+      }
+      setSnap(data);
       setStatus("ready");
       setError(null);
       return null;
@@ -153,6 +166,12 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       if (err) throw new Error(err);
     },
     signOut: async () => {
+      if (repo.mode === "ghost") {
+        // Sai do modo visitante: recarrega para voltar ao app normal (login ou sessão real).
+        leaveGhostMode();
+        window.location.replace("/login");
+        return;
+      }
       await repo.signOut();
       setSnap(null);
       setSession(null);
@@ -170,10 +189,18 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     reopen: (id) => updateTransaction(id, { status: "PENDING", settled_at: null }),
     cancel: (id) => updateTransaction(id, { status: "CANCELLED", cancelled_at: new Date().toISOString() }),
     restore: (id) => updateTransaction(id, { status: "PENDING", cancelled_at: null, settled_at: null }),
-    createInstallments: async (p) => {
-      const list = await repo.createInstallmentPurchase(p);
+    createGroup: async (p) => {
+      const { group, transactions } = buildGroup(p, newId, new Date().toISOString(), today);
+      const list = await repo.createGroup(group, transactions);
+      setSnap((prev) => (prev ? { ...prev, groups: [...prev.groups.filter((g) => g.id !== group.id), group] } : prev));
       putTx(list);
       return list;
+    },
+    endGroup: async (groupId) => {
+      if (!snap) return;
+      const future = futurePendingOfGroup(groupId, snap.transactions, today);
+      await repo.endGroup(groupId, future.map((t) => t.id));
+      await load();
     },
 
     updateProfile: async (patch) => {

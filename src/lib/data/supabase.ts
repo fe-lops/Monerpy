@@ -4,7 +4,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { todayISO } from "../domain/dates";
 import { centsToNumeric, numericToCents } from "../domain/money";
-import type { Category, Profile, Reminder, Transaction } from "../domain/types";
+import type { Category, InstallmentGroup, Profile, Reminder, Transaction } from "../domain/types";
 import type { Repo, SessionInfo, Snapshot } from "./repo";
 import { DEFAULT_CATEGORIES } from "./seed";
 
@@ -53,6 +53,24 @@ function toTx(r: Row): Transaction {
     notes: (r.notes as string) ?? null,
     created_at: String(r.created_at),
     cancelled_at: (r.cancelled_at as string) ?? null,
+  };
+}
+
+function toGroup(r: Row): InstallmentGroup {
+  return {
+    id: String(r.id),
+    kind: ((r.kind as string) ?? "INSTALLMENT") as InstallmentGroup["kind"],
+    type: ((r.type as string) ?? "EXPENSE") as InstallmentGroup["type"],
+    description: (r.description as string) ?? "",
+    total_amount: numericToCents(r.total_amount as string),
+    installment_count: (r.installment_count as number) ?? null,
+    periodicity: ((r.periodicity as string) ?? "MONTHLY") as InstallmentGroup["periodicity"],
+    interval_days: (r.interval_days as number) ?? null,
+    payment_method: r.payment_method as InstallmentGroup["payment_method"],
+    first_due_date: String(r.first_due_date),
+    scope: r.scope as InstallmentGroup["scope"],
+    category_id: (r.category_id as string) ?? null,
+    active: r.active === undefined ? true : Boolean(r.active),
   };
 }
 
@@ -119,12 +137,14 @@ export class SupabaseRepo implements Repo {
 
   async load(): Promise<Snapshot> {
     await this.ensureProfile();
-    const [p, c, t, r] = await Promise.all([
+    const [p, c, t, r, g] = await Promise.all([
       this.sb.from("profiles").select("*").single(),
       this.sb.from("categories").select("*").order("name"),
       this.sb.from("transactions").select("*").order("transaction_date", { ascending: false }),
       this.sb.from("reminders").select("*"),
+      this.sb.from("installment_groups").select("*"),
     ]);
+    fail(g.error);
     fail(p.error);
     fail(c.error);
     fail(t.error);
@@ -134,6 +154,7 @@ export class SupabaseRepo implements Repo {
       categories: (c.data as Category[]).map((x) => ({ ...x })),
       transactions: (t.data as Row[]).map(toTx),
       reminders: r.data as Reminder[],
+      groups: (g.data as Row[]).map(toGroup),
     };
   }
 
@@ -195,21 +216,48 @@ export class SupabaseRepo implements Repo {
     return toTx(data as Row);
   }
 
-  async createInstallmentPurchase(p: Parameters<Repo["createInstallmentPurchase"]>[0]) {
-    const { error } = await this.sb.rpc("create_installment_purchase", {
-      p_group_id: p.id,
-      p_description: p.description,
-      p_total_amount: centsToNumeric(p.total_amount),
-      p_installment_count: p.installment_count,
-      p_first_due_date: p.first_due_date,
-      p_scope: p.scope,
-      p_category_id: p.category_id,
-      p_transaction_date: p.transaction_date,
+  async createGroup(group: InstallmentGroup, transactions: Transaction[]) {
+    // Grupo + cobranças numa única transação do banco (create_transaction_group); idempotente pelo id.
+    const { error } = await this.sb.rpc("create_transaction_group", {
+      p_group: { ...group, total_amount: centsToNumeric(group.total_amount) },
+      p_transactions: transactions.map((t) => ({
+        id: t.id,
+        category_id: t.category_id,
+        type: t.type,
+        scope: t.scope,
+        description: t.description,
+        amount: centsToNumeric(t.amount),
+        transaction_date: t.transaction_date,
+        due_date: t.due_date,
+        expected_date: t.expected_date,
+        installment_number: t.installment_number,
+        installment_count: t.installment_count,
+      })),
     });
     fail(error);
-    const { data, error: e2 } = await this.sb.from("transactions").select("*").eq("installment_group_id", p.id).order("installment_number");
+    const { data, error: e2 } = await this.sb.from("transactions").select("*").eq("installment_group_id", group.id).order("installment_number");
     fail(e2);
     return (data as Row[]).map(toTx);
+  }
+
+  async insertGenerated(transactions: Transaction[]) {
+    if (!transactions.length) return;
+    const rows = transactions.map(({ created_at: _c, cancelled_at: _x, ...t }) => txToRow(t)); // eslint-disable-line @typescript-eslint/no-unused-vars
+    // Outro aparelho pode ter gerado a mesma cobrança: ignora pelo par (grupo, número).
+    const { error } = await this.sb.from("transactions").upsert(rows, { onConflict: "installment_group_id,installment_number", ignoreDuplicates: true });
+    fail(error);
+  }
+
+  async endGroup(groupId: string, cancelTransactionIds: string[]) {
+    const { error } = await this.sb.from("installment_groups").update({ active: false, ended_at: new Date().toISOString() }).eq("id", groupId);
+    fail(error);
+    if (cancelTransactionIds.length) {
+      const { error: e2 } = await this.sb
+        .from("transactions")
+        .update({ status: "CANCELLED", cancelled_at: new Date().toISOString() })
+        .in("id", cancelTransactionIds);
+      fail(e2);
+    }
   }
 
   async setReminderStatus(transactionId: string, remindAt: string, status: Reminder["status"]) {
