@@ -21,6 +21,8 @@ export const serverConfig = {
     /** Remetente, ex.: "Monerpy <no-reply@seudominio.com>" */
     from: clean(process.env.SMTP_FROM) || clean(process.env.SMTP_USER),
   },
+  /** E-mail de suporte exibido a quem teve o registro recusado (opcional, público). */
+  supportEmail: clean(process.env.SUPPORT_EMAIL),
   /** E-mail que recebe aviso de novas solicitações (opcional). */
   adminEmail: clean(process.env.ADMIN_EMAIL),
   /** URL pública do app para os links dos e-mails (opcional; padrão: origem da requisição). */

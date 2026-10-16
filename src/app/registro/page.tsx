@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -17,6 +18,8 @@ export default function RegistroPage() {
   const { repo, status } = useData();
   const router = useRouter();
   const [serverError, setServerError] = useState("");
+  // Pedido bloqueado pelo histórico do e-mail (recusado antes ou já aprovado).
+  const [notice, setNotice] = useState<{ code: "REJECTED" | "APPROVED"; message: string } | null>(null);
   const { register, handleSubmit, formState } = useForm<RegisterInput>({ resolver: zodResolver(registerSchema) });
 
   useEffect(() => {
@@ -27,6 +30,7 @@ export default function RegistroPage() {
 
   const onSubmit = handleSubmit(async (data) => {
     setServerError("");
+    setNotice(null);
     try {
       const res = await fetch("/api/registro", {
         method: "POST",
@@ -35,6 +39,7 @@ export default function RegistroPage() {
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
+        if (res.status === 409 && (body.code === "REJECTED" || body.code === "APPROVED")) return setNotice({ code: body.code, message: body.error });
         throw new Error(body.error ?? "Não foi possível enviar o pedido. Tente novamente.");
       }
       router.push("/registro/enviado");
@@ -57,6 +62,19 @@ export default function RegistroPage() {
           </Field>
           {/* Campo-armadilha contra robôs: invisível para pessoas, deve ficar vazio. */}
           <input type="text" tabIndex={-1} autoComplete="off" aria-hidden className="hidden" {...register("website")} />
+          {notice && (
+            <div className="panel flex flex-col gap-2 p-4 text-sm" role="alert">
+              <strong className={notice.code === "REJECTED" ? "text-neg" : "text-pos"}>
+                {notice.code === "REJECTED" ? "Solicitação já enviada anteriormente" : "Acesso já aprovado"}
+              </strong>
+              <p className="text-ink-2">{notice.message}</p>
+              {notice.code === "APPROVED" && (
+                <Link href="/recuperar-senha" className="linkbtn self-start">
+                  Esqueci minha senha
+                </Link>
+              )}
+            </div>
+          )}
           {serverError && (
             <p className="error" role="alert">
               {serverError}

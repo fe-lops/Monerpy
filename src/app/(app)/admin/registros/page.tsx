@@ -69,7 +69,10 @@ export default function RegistrosPage() {
         body: JSON.stringify({ action: decision.action, note: note.trim() || undefined }),
       });
       const who = decision.req.email;
-      if (decision.action === "approve") toast(`Aprovado: ${who} recebeu o link para criar a senha.`);
+      if (decision.action === "approve") {
+        toast(`Aprovado: ${who} recebeu o link para criar a senha.`);
+        if (decision.req.status === "REJECTED") setTab("APPROVED"); // o pedido foi movido para Aprovados
+      }
       else toast(body.emailSent ? `Recusado: ${who} foi avisada por e-mail.` : `Recusado: ${who}. E-mail não enviado (SMTP não configurado).`);
       setDecision(null);
       await load();
@@ -83,6 +86,7 @@ export default function RegistrosPage() {
   const count = (s: RegistrationStatus) => list?.filter((r) => r.status === s).length ?? 0;
   const shown = list?.filter((r) => r.status === tab) ?? [];
   const resend = decision?.action === "approve" && decision.req.status === "APPROVED";
+  const fromRejected = decision?.action === "approve" && decision.req.status === "REJECTED";
 
   return (
     <Screen>
@@ -150,6 +154,11 @@ export default function RegistrosPage() {
                     </button>
                   </>
                 )}
+                {r.status === "REJECTED" && (
+                  <button type="button" className="chip" onClick={() => setDecision({ req: r, action: "approve" })}>
+                    <Check size={16} aria-hidden /> Aprovar cadastro
+                  </button>
+                )}
                 {r.status === "APPROVED" && (
                   <button type="button" className="chip" onClick={() => setDecision({ req: r, action: "approve" })}>
                     <RefreshCw size={16} aria-hidden /> Reenviar link
@@ -164,7 +173,7 @@ export default function RegistrosPage() {
       <Sheet
         open={!!decision}
         onClose={() => setDecision(null)}
-        title={decision?.action === "reject" ? "Recusar registro?" : resend ? "Reenviar link?" : "Aprovar registro?"}
+        title={decision?.action === "reject" ? "Recusar registro?" : resend ? "Reenviar link?" : fromRejected ? "Aprovar cadastro recusado?" : "Aprovar registro?"}
       >
         {decision && (
           <>
@@ -175,7 +184,9 @@ export default function RegistrosPage() {
               <p className="text-ink-2">
                 {resend
                   ? "Um novo link para criar a senha será enviado. O anterior deixa de valer."
-                  : "A conta será criada e a pessoa receberá um e-mail com o link para criar a senha."}
+                  : fromRejected
+                    ? "O pedido sai de Recusados e vai para Aprovados. A conta será criada e a pessoa receberá um e-mail com o link para criar a senha."
+                    : "A conta será criada e a pessoa receberá um e-mail com o link para criar a senha."}
               </p>
             ) : (
               <>
@@ -192,7 +203,7 @@ export default function RegistrosPage() {
               disabled={busy}
               onClick={confirm}
             >
-              {busy ? "Enviando…" : decision.action === "reject" ? "Recusar registro" : resend ? "Reenviar link" : "Aprovar e enviar link"}
+              {busy ? "Enviando…" : decision.action === "reject" ? "Recusar registro" : resend ? "Reenviar link" : fromRejected ? "Aprovar cadastro" : "Aprovar e enviar link"}
             </button>
             <button type="button" className="btn-ghost" onClick={() => setDecision(null)}>
               Cancelar
