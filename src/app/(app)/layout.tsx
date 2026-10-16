@@ -13,10 +13,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const onboarding = path === "/onboarding";
 
+  // A introdução (saldo inicial) acontece UMA vez por conta: o estado fica em profiles.onboarded,
+  // no banco, e vale para qualquer aparelho.
+  const needsOnboarding = status === "ready" && !!profile && !profile.onboarded;
+  const alreadyOnboarded = status === "ready" && !!profile && profile.onboarded;
+
   useEffect(() => {
-    if (status === "anon") router.replace(`/login?next=${encodeURIComponent(path)}`);
-    if (status === "ready" && profile && !profile.onboarded && !onboarding) router.replace("/onboarding");
-  }, [status, profile, onboarding, path, router]);
+    if (status === "anon") router.replace(onboarding ? "/login" : `/login?next=${encodeURIComponent(path)}`);
+    if (needsOnboarding && !onboarding) router.replace("/onboarding");
+    // Aba restaurada, atalho na tela inicial ou retorno do login podem abrir /onboarding de novo.
+    if (alreadyOnboarded && onboarding) router.replace("/dashboard");
+  }, [status, needsOnboarding, alreadyOnboarded, onboarding, path, router]);
 
   if (status === "error") {
     return (
@@ -32,7 +39,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </Screen>
     );
   }
-  if (status !== "ready" || !profile || (!profile.onboarded && !onboarding)) return <Spinner />;
+  // Enquanto redireciona, não mostra a tela errada (nem a introdução para quem já fez).
+  if (status !== "ready" || !profile || (needsOnboarding && !onboarding) || (alreadyOnboarded && onboarding)) return <Spinner />;
 
   if (onboarding) return <>{children}</>;
 
