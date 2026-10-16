@@ -1,5 +1,15 @@
 // Escala e rótulos compartilhados pelos gráficos (valores em centavos).
 
+import type { CSSProperties } from "react";
+
+/**
+ * Colunas iguais que nunca passam da largura disponível. Com `flex`, rótulos longos sem quebra
+ * (ex.: "Supermercado & Feira") somariam a largura mínima do gráfico e alargariam a página no celular.
+ */
+export function equalColumns(n: number): CSSProperties {
+  return { display: "grid", gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` };
+}
+
 export function niceTop(max: number): { top: number; step: number } {
   const reais = max / 100;
   const raw = reais / 4;

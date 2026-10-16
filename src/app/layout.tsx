@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Inter } from "next/font/google";
+import { OverflowGuard } from "@/components/layout/OverflowGuard";
 import { DataProvider } from "@/providers/DataProvider";
 import { ToastProvider } from "@/providers/ToastProvider";
 import "./globals.css";
@@ -40,6 +41,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body>
         <ToastProvider>
           <DataProvider>{children}</DataProvider>
+          <OverflowGuard />
         </ToastProvider>
       </body>
     </html>
