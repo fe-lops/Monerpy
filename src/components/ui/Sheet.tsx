@@ -6,18 +6,29 @@ import { X } from "lucide-react";
 /** Folha inferior modal (padrão do Design System para formulários rápidos). */
 export function Sheet({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
+
+  // Guarda o onClose mais recente sem reexecutar o efeito abaixo. As telas passam
+  // `onClose={() => …}` (função nova a cada render); se o efeito dependesse dela,
+  // rodaria a cada tecla digitada e roubaria o foco do campo de texto.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  // Roda só quando a folha abre/fecha.
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onCloseRef.current();
     document.addEventListener("keydown", onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    ref.current?.focus();
+    // Foca a folha para leitores de tela, sem tirar o foco de um campo com autoFocus.
+    if (!ref.current?.contains(document.activeElement)) ref.current?.focus();
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
     };
-  }, [open, onClose]);
+  }, [open]);
   if (!open) return null;
   return (
     // Celular: folha que sobe da base. Computador: modal centralizado.
