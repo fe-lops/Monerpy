@@ -63,4 +63,5 @@ O projeto segue [SemVer](https://semver.org/lang/pt-BR/). Para lançar uma vers�
 - [ ] `npm run check` e `npm run build` passam
 - [ ] Testado no celular (375 px) e no computador (≥ 1024 px), tema escuro e claro
 - [ ] Regras financeiras novas têm teste
+- [ ] Funcionalidade nova tem exemplo no usuário fantasma (`buildDemoData` em `src/lib/data/seed.ts`)
 - [ ] `CHANGELOG.md` atualizado em **[Não lançado]**
