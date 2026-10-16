@@ -8,6 +8,15 @@ for `0.x`, o app está em desenvolvimento e mudanças de comportamento podem aco
 
 ## [Não lançado]
 
+## [0.4.1] — 2026-10-16
+
+### Corrigido
+- Área de Registros mostrava "Sessão expirada" e o pedido de registro falhava sem explicação quando a
+  `SUPABASE_SERVICE_ROLE_KEY` estava errada. O servidor agora detecta chave pública no lugar da secreta,
+  chave de outro projeto, chave cortada ou recusada pelo Supabase, e explica a correção na tela de
+  Registros (o público vê só uma mensagem genérica). Detalhes vão para os logs da Vercel.
+- Tabela de pedidos inexistente (migration não executada) é identificada também pelo código `PGRST205`.
+
 ## [0.4.0] — 2026-10-16
 
 ### Adicionado
@@ -62,7 +71,8 @@ for `0.x`, o app está em desenvolvimento e mudanças de comportamento podem aco
   exportação CSV e configurações.
 - Regras financeiras do PRD com testes; camada de dados local e Supabase (RLS).
 
-[Não lançado]: https://github.com/fe-lops/Monerpy/compare/v0.4.0...HEAD
+[Não lançado]: https://github.com/fe-lops/Monerpy/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/fe-lops/Monerpy/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/fe-lops/Monerpy/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/fe-lops/Monerpy/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/fe-lops/Monerpy/compare/v0.1.0...v0.2.0

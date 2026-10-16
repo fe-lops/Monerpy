@@ -4,7 +4,7 @@ import { requireAdmin } from "@/lib/server/auth";
 import { approvedEmail, rejectedEmail } from "@/lib/server/emails";
 import { appUrl, handle } from "@/lib/server/http";
 import { isSmtpConfigured, sendMail } from "@/lib/server/mailer";
-import { ApiError, supabaseAdmin } from "@/lib/server/supabaseAdmin";
+import { ApiError, assertKeyAccepted, supabaseAdmin } from "@/lib/server/supabaseAdmin";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -25,6 +25,7 @@ export async function POST(request: Request, { params }: Ctx) {
 
     const db = supabaseAdmin();
     const { data: req, error } = await db.from("registration_requests").select("id, email, status").eq("id", id).maybeSingle();
+    assertKeyAccepted(error);
     if (error || !req) throw new ApiError(404, "Pedido não encontrado.");
 
     const decided = { decided_at: new Date().toISOString(), decided_by: adminUser.userId };
@@ -58,6 +59,7 @@ async function sendApprovalLink(email: string, redirectTo: string): Promise<void
 
   if (!isSmtpConfigured) {
     const { error } = await auth.inviteUserByEmail(email, { redirectTo });
+    assertKeyAccepted(error);
     if (error) {
       if (/already been registered|already exists/i.test(error.message))
         throw new ApiError(409, "Este e-mail já tem conta. Configure o SMTP para reenviar o link, ou peça para a pessoa usar “Esqueci minha senha”.");
@@ -74,6 +76,7 @@ async function sendApprovalLink(email: string, redirectTo: string): Promise<void
     type = "magiclink";
     res = await auth.generateLink({ type: "magiclink", email, options: { redirectTo } });
   }
+  assertKeyAccepted(res.error);
   if (res.error || !res.data.properties?.hashed_token) throw new ApiError(500, `Não foi possível gerar o link: ${res.error?.message ?? "sem token"}`);
 
   const link = `${redirectTo}?token_hash=${encodeURIComponent(res.data.properties.hashed_token)}&type=${type}`;

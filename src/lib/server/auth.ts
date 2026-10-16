@@ -1,5 +1,5 @@
 import "server-only";
-import { ApiError, supabaseAdmin } from "./supabaseAdmin";
+import { ApiError, assertKeyAccepted, supabaseAdmin } from "./supabaseAdmin";
 
 /**
  * Garante que a requisição vem de uma administradora logada.
@@ -11,9 +11,14 @@ export async function requireAdmin(request: Request): Promise<{ userId: string; 
 
   const admin = supabaseAdmin();
   const { data, error } = await admin.auth.getUser(token);
-  if (error || !data.user) throw new ApiError(401, "Sessão expirada. Entre novamente.");
+  assertKeyAccepted(error); // chave do servidor recusada ≠ sessão expirada
+  if (error || !data.user) {
+    if (error) console.error("[auth] getUser", error.message);
+    throw new ApiError(401, "Sessão expirada. Entre novamente.");
+  }
 
-  const { data: profile } = await admin.from("profiles").select("is_admin").eq("user_id", data.user.id).maybeSingle();
+  const { data: profile, error: profileError } = await admin.from("profiles").select("is_admin").eq("user_id", data.user.id).maybeSingle();
+  assertKeyAccepted(profileError);
   if (!profile?.is_admin) throw new ApiError(403, "Apenas administradores podem fazer isso.");
 
   return { userId: data.user.id, email: data.user.email ?? null };

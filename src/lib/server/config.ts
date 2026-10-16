@@ -1,5 +1,6 @@
 import "server-only";
 import { SUPABASE_URL } from "@/lib/env";
+import { serviceKeyProblem } from "@/lib/supabaseKeys";
 
 // Variáveis SOMENTE do servidor (sem prefixo NEXT_PUBLIC_): nunca chegam ao navegador.
 // Na Vercel, cadastre-as como "Sensitive".
@@ -26,5 +27,10 @@ export const serverConfig = {
   appUrl: clean(process.env.APP_URL).replace(/\/+$/, ""),
 };
 
-export const isAdminApiConfigured = Boolean(serverConfig.supabaseUrl && serverConfig.serviceRoleKey);
+/** Problema detectado no formato da chave secreta (chave pública, de outro projeto…), ou null. */
+export const serviceKeyIssue: string | null = serverConfig.supabaseUrl
+  ? serviceKeyProblem(serverConfig.serviceRoleKey, serverConfig.supabaseUrl)
+  : "NEXT_PUBLIC_SUPABASE_URL não está configurada.";
+
+export const isAdminApiConfigured = serviceKeyIssue === null;
 export const isSmtpConfigured = Boolean(serverConfig.smtp.host && serverConfig.smtp.user && serverConfig.smtp.pass);
