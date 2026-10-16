@@ -8,7 +8,7 @@ const ITEMS = [
   { href: "/dashboard", label: "Início", icon: House, match: ["/dashboard"] },
   { href: "/movimentacoes", label: "Movimentações", icon: List, match: ["/movimentacoes"] },
   { href: "/pendencias", label: "Pendências", icon: Wallet, match: ["/pendencias", "/contas-a-pagar", "/contas-a-receber"] },
-  { href: "/mais", label: "Mais", icon: Ellipsis, match: ["/mais", "/lembretes", "/relatorios", "/categorias", "/exportar", "/configuracoes"] },
+  { href: "/mais", label: "Mais", icon: Ellipsis, match: ["/mais", "/lembretes", "/relatorios", "/categorias", "/exportar", "/configuracoes", "/admin"] },
 ];
 
 export function BottomNav() {

@@ -79,3 +79,16 @@ export function fieldErrors(err: z.ZodError): Record<string, string> {
   }
   return out;
 }
+
+/** Pedido de registro: apenas o e-mail. `website` é um campo-armadilha contra robôs (deve vir vazio). */
+export const registerSchema = z.object({
+  email: z.string().trim().toLowerCase().min(1, "Informe o e-mail.").max(254, "E-mail muito longo.").email("E-mail inválido."),
+  website: z.string().max(0).optional(),
+});
+export type RegisterInput = z.infer<typeof registerSchema>;
+
+/** Decisão do administrador sobre um pedido de registro. */
+export const registrationDecisionSchema = z.object({
+  action: z.enum(["approve", "reject"]),
+  note: z.string().trim().max(500, "Use até 500 caracteres.").optional(),
+});

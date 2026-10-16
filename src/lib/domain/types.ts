@@ -17,6 +17,8 @@ export interface Profile {
   opening_balance_date: ISODate;
   timezone: string;
   onboarded: boolean;
+  /** Pode aprovar/recusar pedidos de registro. Definido só pelo banco (não editável pelo app). */
+  is_admin: boolean;
 }
 
 export interface Category {
@@ -104,4 +106,16 @@ export interface NewInstallmentPurchase {
   scope: Scope;
   category_id: string | null;
   transaction_date: ISODate;
+}
+
+export type RegistrationStatus = "PENDING" | "APPROVED" | "REJECTED";
+
+/** Pedido de acesso de uma nova usuária, aprovado ou recusado por um administrador. */
+export interface RegistrationRequest {
+  id: string;
+  email: string;
+  status: RegistrationStatus;
+  note: string | null;
+  created_at: string;
+  decided_at: string | null;
 }

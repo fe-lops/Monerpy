@@ -29,6 +29,10 @@ export interface Repo {
   signOut(): Promise<void>;
   requestPasswordReset(email: string, redirectTo: string): Promise<void>;
   updatePassword(password: string): Promise<void>;
+  /** Token da sessão, enviado às rotas /api do servidor (Authorization: Bearer). */
+  getAccessToken(): Promise<string | null>;
+  /** Abre a sessão a partir do link de e-mail (convite de registro aprovado / magic link). */
+  verifyEmailToken(tokenHash: string, type: "invite" | "magiclink" | "recovery"): Promise<void>;
 
   load(): Promise<Snapshot>;
   updateProfile(patch: Partial<Omit<Profile, "user_id">>): Promise<Profile>;
