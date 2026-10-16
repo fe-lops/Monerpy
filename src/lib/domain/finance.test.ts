@@ -3,13 +3,13 @@ import { addMonths, todayISO } from "./dates";
 import {
   availableBalance,
   bucketPending,
-  buildInstallments,
   isOverdue,
   pendingTotals,
   realizedInPeriod,
   splitInstallments,
   toCSV,
 } from "./finance";
+import { buildGroup } from "./recurrence";
 import { centsToNumeric, maskBRLInput, numericToCents, parseBRL } from "./money";
 import type { Transaction } from "./types";
 
@@ -90,10 +90,25 @@ describe("critérios de aceite do PRD (§11)", () => {
 
   it("R$ 100 em 3 parcelas soma exatamente R$ 100, com ajuste na última", () => {
     expect(splitInstallments(10000, 3)).toEqual([3333, 3333, 3334]);
-    const parts = buildInstallments(
-      { id: "g1", description: "Notebook", total_amount: 10000, installment_count: 3, first_due_date: "2026-01-31", scope: "PERSONAL", category_id: null, transaction_date: TODAY },
+    const { transactions: parts } = buildGroup(
+      {
+        id: "g1",
+        kind: "INSTALLMENT",
+        type: "EXPENSE",
+        description: "Notebook",
+        amount: 10000,
+        amount_mode: "TOTAL",
+        installment_count: 3,
+        periodicity: "MONTHLY",
+        interval_days: null,
+        first_due_date: "2026-01-31",
+        scope: "PERSONAL",
+        category_id: null,
+        transaction_date: TODAY,
+      },
       () => `p${n++}`,
       "2026-10-15T12:00:00Z",
+      TODAY,
     );
     expect(parts.reduce((s, p) => s + p.amount, 0)).toBe(10000);
     expect(parts.map((p) => p.due_date)).toEqual(["2026-01-31", "2026-02-28", "2026-03-31"]);

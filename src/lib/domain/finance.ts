@@ -5,7 +5,6 @@ import { METHOD_LABEL, SCOPE_LABEL, STATUS_LABEL } from "./types";
 import type {
   Category,
   ISODate,
-  NewInstallmentPurchase,
   Profile,
   ScopeFilter,
   Transaction,
@@ -138,31 +137,6 @@ export function splitInstallments(totalCents: number, count: number): number[] {
   const values = Array.from({ length: count }, () => base);
   values[count - 1] = totalCents - base * (count - 1);
   return values;
-}
-
-/** Regra 13: um grupo gera N despesas pendentes no cartão de crédito, com vencimentos mensais. */
-export function buildInstallments(p: NewInstallmentPurchase, makeId: () => string, nowIso: string): Transaction[] {
-  const values = splitInstallments(p.total_amount, p.installment_count);
-  return values.map((amount, i) => ({
-    id: makeId(),
-    category_id: p.category_id,
-    installment_group_id: p.id,
-    type: "EXPENSE",
-    scope: p.scope,
-    status: "PENDING",
-    description: `${p.description} (${i + 1}/${p.installment_count})`,
-    amount,
-    transaction_date: p.transaction_date,
-    due_date: addMonths(p.first_due_date, i),
-    expected_date: null,
-    settled_at: null,
-    payment_method: "CREDIT_CARD",
-    installment_number: i + 1,
-    installment_count: p.installment_count,
-    notes: null,
-    created_at: nowIso,
-    cancelled_at: null,
-  }));
 }
 
 /** Pendências que geram lembrete interno: atrasadas ou vencendo dentro de `leadDays`. Regra 19. */
