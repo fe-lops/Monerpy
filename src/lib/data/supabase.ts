@@ -6,6 +6,7 @@ import { todayISO } from "../dates";
 import { centsToNumeric, numericToCents } from "../money";
 import type { Category, Profile, Reminder, Transaction } from "../types";
 import type { Repo, SessionInfo, Snapshot } from "./repo";
+import { DEFAULT_CATEGORIES } from "./seed";
 
 type Row = Record<string, unknown>;
 
@@ -72,6 +73,11 @@ function translate(msg: string): string {
   if (/duplicate key.*categories/i.test(msg)) return "Já existe uma categoria com esse nome.";
   if (/rate limit/i.test(msg)) return "Muitas tentativas. Aguarde alguns minutos.";
   if (/password should be/i.test(msg)) return "A senha precisa ter pelo menos 6 caracteres.";
+  if (/does not exist|could not find the (table|function)|schema cache/i.test(msg))
+    return "O banco do Monerpy ainda não foi criado neste projeto Supabase. Rode o arquivo supabase/migrations/20261015000000_init.sql no SQL Editor.";
+  if (/row-level security|permission denied/i.test(msg)) return "Sem permissão para acessar os dados. Confira se a migration (com as políticas RLS) foi executada.";
+  if (/failed to fetch|networkerror|load failed/i.test(msg)) return "Não foi possível conectar ao Supabase. Confira a URL do projeto e sua conexão.";
+  if (/invalid api key|no api key/i.test(msg)) return "Chave do Supabase inválida. Confira NEXT_PUBLIC_SUPABASE_ANON_KEY na Vercel.";
   return msg;
 }
 
@@ -100,6 +106,7 @@ export class SupabaseRepo implements Repo {
   }
 
   async load(): Promise<Snapshot> {
+    await this.ensureProfile();
     const [p, c, t, r] = await Promise.all([
       this.sb.from("profiles").select("*").single(),
       this.sb.from("categories").select("*").order("name"),
@@ -116,6 +123,28 @@ export class SupabaseRepo implements Repo {
       transactions: (t.data as Row[]).map(toTx),
       reminders: r.data as Reminder[],
     };
+  }
+
+  /**
+   * Usuária criada antes da migration não ganhou perfil/categorias pelo gatilho do banco.
+   * Cria aqui no primeiro login (o RLS permite inserir apenas os próprios dados).
+   */
+  private async ensureProfile() {
+    const { data: u } = await this.sb.auth.getUser();
+    if (!u.user) throw new Error("Sessão expirada. Entre novamente.");
+    const existing = await this.sb.from("profiles").select("user_id").maybeSingle();
+    fail(existing.error);
+    if (existing.data) return;
+
+    const ins = await this.sb.from("profiles").insert({ user_id: u.user.id });
+    if (ins.error && ins.error.code !== "23505") fail(ins.error); // 23505 = já criado em paralelo
+
+    const cats = await this.sb.from("categories").select("id").limit(1);
+    fail(cats.error);
+    if (!cats.data?.length) {
+      const seed = await this.sb.from("categories").insert(DEFAULT_CATEGORIES);
+      if (seed.error && seed.error.code !== "23505") fail(seed.error);
+    }
   }
 
   async updateProfile(patch: Partial<Omit<Profile, "user_id">>) {

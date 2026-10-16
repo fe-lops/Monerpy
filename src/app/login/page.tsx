@@ -12,7 +12,7 @@ import { supabaseEnvProblems } from "@/lib/env";
 import { loginSchema, type LoginInput } from "@/lib/schemas";
 
 function LoginForm() {
-  const { repo, status, signIn } = useData();
+  const { repo, status, signIn, error: loadError, reload, signOut } = useData();
   const router = useRouter();
   const params = useSearchParams();
   const next = params.get("next");
@@ -62,7 +62,22 @@ function LoginForm() {
 
   return (
     <AuthCard title="Entrar" subtitle="Acesse seu controle de caixa.">
-      <form className="flex flex-col gap-4" onSubmit={onSubmit} noValidate>
+      {status === "error" && !serverError && (
+        <div className="panel flex flex-col gap-3 p-4 text-sm" role="alert">
+          <strong className="text-neg">Você entrou, mas os dados não carregaram.</strong>
+          <p className="text-ink-2">{loadError}</p>
+          <div className="flex gap-2">
+            <button type="button" className="chip" onClick={() => reload()}>
+              Tentar novamente
+            </button>
+            <button type="button" className="chip" onClick={() => signOut()}>
+              Sair
+            </button>
+          </div>
+        </div>
+      )}
+      {/* method="post": se o JavaScript falhar, a senha não vai parar na barra de endereço. */}
+      <form className="flex flex-col gap-4" method="post" onSubmit={onSubmit} noValidate>
         <Field label="E-mail" error={formState.errors.email?.message}>
           {(id) => <input id={id} type="email" autoComplete="email" inputMode="email" className="field" aria-invalid={!!formState.errors.email} {...register("email")} />}
         </Field>
