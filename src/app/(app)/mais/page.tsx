@@ -53,7 +53,7 @@ export default function MaisPage() {
           </li>
         ))}
       </ul>
-      <p className="text-center text-xs text-ink-2">Monerpy v0.1 · MVP</p>
+      <p className="text-center text-xs text-ink-2">Monerpy v{process.env.NEXT_PUBLIC_APP_VERSION}</p>
     </Screen>
   );
 }
