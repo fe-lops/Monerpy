@@ -8,6 +8,20 @@ for `0.x`, o app está em desenvolvimento e mudanças de comportamento podem aco
 
 ## [Não lançado]
 
+## [0.7.0] — 2026-10-17
+
+### Alterado
+- **Tipo de cobrança no crédito em cartões**: ao escolher Crédito aparecem três cartões —
+  *Pagamento não recorrente* (já selecionado), *Parcelar ou repetir* e *Fixa mensal* — no lugar do
+  interruptor "Parcelar no crédito" e da janela de opções.
+
+### Corrigido
+- Layout "encolhido" no celular (visível no usuário fantasma): grades sem colunas definidas cresciam até o
+  tamanho dos nomes longos de categoria e alargavam a página. Grades agora têm colunas que não passam da
+  tela; rede de segurança no CSS (`overflow-x: clip`, `min-width: 0`) e alarme `OverflowGuard` em desenvolvimento.
+- O "R$ 0,00" do valor ficava com a cor do tipo anterior (vermelho na Entrada) ao alternar Entrada/Saída
+  sem tocar no campo.
+
 ## [0.6.0] — 2026-10-17
 
 ### Adicionado
@@ -106,7 +120,8 @@ for `0.x`, o app está em desenvolvimento e mudanças de comportamento podem aco
   exportação CSV e configurações.
 - Regras financeiras do PRD com testes; camada de dados local e Supabase (RLS).
 
-[Não lançado]: https://github.com/fe-lops/Monerpy/compare/v0.6.0...HEAD
+[Não lançado]: https://github.com/fe-lops/Monerpy/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/fe-lops/Monerpy/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/fe-lops/Monerpy/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/fe-lops/Monerpy/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/fe-lops/Monerpy/compare/v0.4.0...v0.4.1
