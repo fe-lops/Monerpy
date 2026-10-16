@@ -13,6 +13,7 @@ Next.js 15 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · Supabase 
 npm install
 npm run dev      # http://localhost:3000
 npm test         # regras financeiras (critérios de aceite do PRD)
+npm run check    # tipos + lint + testes (rode antes de cada commit)
 npm run build
 ```
 
@@ -36,17 +37,25 @@ Serve para desenvolver e demonstrar (há a opção "Explorar com dados de exempl
 
 ```
 src/
-  app/
-    (app)/            área autenticada (dashboard, movimentações, pendências, mais…)
-    login, recuperar-senha, redefinir-senha
-  components/         UI compartilhada (navegação, formulários, gráficos, providers)
+  app/                  rotas (App Router). (app)/ = área autenticada
+  components/
+    ui/                 peças visuais genéricas do Design System
+    layout/             Sidebar (computador), BottomNav (celular), AuthCard
+    transactions/       lançamentos: formulário, linhas, baixa, pendências
+    charts/             gráficos em CSS
+  providers/            estado global: dados (DataProvider) e avisos (ToastProvider)
+  hooks/                hooks reutilizáveis
   lib/
-    finance.ts        regras de negócio puras (saldo, pendências, parcelas, relatórios, CSV)
-    money.ts, dates.ts  dinheiro em centavos inteiros e datas no fuso America/Sao_Paulo
-    data/             camada de dados: LocalRepo (navegador) e SupabaseRepo
-  middleware.ts       protege rotas quando o Supabase está configurado
-supabase/migrations/  esquema SQL com RLS
+    domain/             regras de negócio puras + testes (saldo, parcelas, CSV…)
+    data/               acesso a dados: LocalRepo (navegador) e SupabaseRepo
+    env.ts              leitura/validação das variáveis do Supabase
+  middleware.ts         protege rotas quando o Supabase está configurado
+supabase/migrations/    esquema SQL versionado com RLS
+docs/ARQUITETURA.md     camadas, convenções e "onde mexer para…"
 ```
+
+Detalhes em [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md). Para contribuir (branches, commits, versões),
+veja [`CONTRIBUTING.md`](CONTRIBUTING.md). Histórico de versões em [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Decisões
 

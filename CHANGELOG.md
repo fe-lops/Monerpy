@@ -1,0 +1,53 @@
+# Changelog
+
+Todas as mudanças relevantes do Monerpy ficam registradas aqui.
+
+O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o projeto usa
+[Versionamento Semântico](https://semver.org/lang/pt-BR/) (`MAJOR.MINOR.PATCH`). Enquanto a versão
+for `0.x`, o app está em desenvolvimento e mudanças de comportamento podem acontecer em versões MINOR.
+
+## [Não lançado]
+
+## [0.3.0] — 2026-10-15
+
+### Adicionado
+- Seletor Entrada/Saída colorido no novo lançamento: vermelho para saída, verde para entrada, pílula
+  com borda branca que desliza entre as opções; valor e botão de confirmar acompanham a cor.
+- Documentação de arquitetura (`docs/ARQUITETURA.md`), guia de contribuição (`CONTRIBUTING.md`) e este changelog.
+- Script `npm run check` (tipos + lint + testes).
+
+### Corrigido
+- Página aparecia só com o HTML (sem estilo) no celular quando o navegador abria uma versão antiga
+  do app; agora a página se recarrega uma vez e busca a versão atual.
+- Tela de nova senha valida o link antes de exibir o formulário e explica quando ele expirou ou foi
+  aberto em outro navegador.
+
+### Alterado
+- Código reorganizado em pastas por responsabilidade (`components/ui`, `components/layout`,
+  `components/transactions`, `components/charts`, `providers`, `hooks`, `lib/domain`, `lib/data`).
+  Nenhuma mudança de comportamento.
+
+## [0.2.0] — 2026-10-15
+
+### Adicionado
+- Interface para computador: barra lateral a partir de 1024 px, telas em grade e modais centralizados.
+- Diagnóstico das variáveis do Supabase na tela de login.
+- Criação automática de perfil e categorias no primeiro login, se ausentes.
+
+### Corrigido
+- Build quebrava com `NEXT_PUBLIC_SUPABASE_URL` mal formatada; formatos comuns agora são corrigidos.
+- Login não mostrava erros de carregamento dos dados.
+- Chave secreta do Supabase é recusada no navegador.
+
+## [0.1.0] — 2026-10-15
+
+### Adicionado
+- MVP mobile: login e recuperação de senha, saldo inicial, dashboard, movimentações com busca e
+  filtros, lançamento com parcelamento no cartão, pendências, lembretes, relatórios, categorias,
+  exportação CSV e configurações.
+- Regras financeiras do PRD com testes; camada de dados local e Supabase (RLS).
+
+[Não lançado]: https://github.com/fe-lops/Monerpy/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/fe-lops/Monerpy/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/fe-lops/Monerpy/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/fe-lops/Monerpy/releases/tag/v0.1.0
