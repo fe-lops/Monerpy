@@ -74,6 +74,17 @@
 html,
 body {
   min-height: 100%;
+  /* Rede de segurança: nada alarga a página na horizontal. Sem isso, um único texto longo faz o
+     navegador do celular reduzir o zoom e a tela inteira parece "encolhida". (clip não cria barra
+     de rolagem nem quebra o position: sticky da faixa do topo.) */
+  overflow-x: clip;
+}
+
+/* Filhos de grade podem encolher abaixo do tamanho do próprio texto. Sem isto, uma coluna "auto"
+   cresce até caber o maior texto sem quebra (nomes de categoria, descrições longas) e alarga a página.
+   Regra: grades no celular usam grid-cols-1 (ou minmax(0, 1fr)); veja docs/ARQUITETURA.md. */
+.grid > * {
+  min-width: 0;
 }
 body {
   background: var(--bg-app);
@@ -203,6 +214,14 @@ body {
   }
   .tx-form .valor:focus-visible {
     border-bottom-color: var(--tx-solid);
+  }
+  /* O "R$ 0,00" (placeholder) tem cor PRÓPRIA, vinda direto da variável do tipo. Se herdasse a cor do
+     campo (currentColor), o Chrome não o redesenha durante a transição de cor e ele ficava com a cor do
+     tipo anterior (vermelho na Entrada) até o campo receber foco. */
+  .tx-form .valor::placeholder {
+    color: color-mix(in srgb, var(--tx-ink) 55%, transparent);
+    opacity: 1;
+    transition: none;
   }
   .tx-form .cta-tx {
     background: var(--tx-solid);

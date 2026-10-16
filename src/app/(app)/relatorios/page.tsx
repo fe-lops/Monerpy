@@ -27,7 +27,7 @@ export default function RelatoriosPage() {
         <ScopeSeg value={scope} onChange={setScope} />
       </div>
 
-      <div className="grid items-start gap-5 lg:grid-cols-2 lg:gap-6">
+      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-2 lg:gap-6">
 
       <section className="panel p-4">
         <h2 className="sub">Entradas x saídas realizadas</h2>

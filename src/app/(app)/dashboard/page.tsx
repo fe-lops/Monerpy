@@ -66,7 +66,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Faixa 1 — celular: saldo, contexto, cartões lado a lado. Computador: 3 colunas. */}
-      <div className="grid gap-5 lg:grid-cols-3 lg:gap-6">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3 lg:gap-6">
         <section className="flex flex-col justify-center gap-1 rounded-xl bg-accent px-4 py-5 text-center text-on-accent lg:items-start lg:px-6 lg:text-left" aria-label="Saldo">
           <span>Saldo total disponível</span>
           <span className="num font-display text-[36px] font-bold leading-[44px] tracking-[-0.01em]">{brl(balance)}</span>
@@ -94,7 +94,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Faixa 2 — período (1/3) e gastos por categoria (2/3). */}
-      <div className="grid gap-5 lg:grid-cols-3 lg:gap-6">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3 lg:gap-6">
         <section className="panel flex flex-col gap-3 p-4 lg:p-5">
           {nav}
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-1 lg:gap-4">
@@ -120,7 +120,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Faixa 3 — listas lado a lado no computador. */}
-      <div className="grid items-start gap-5 lg:grid-cols-2 lg:gap-6">
+      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-2 lg:gap-6">
         <section className="flex flex-col gap-2.5">
           <div className="flex items-baseline justify-between">
             <h2 className="sub">Próximos vencimentos</h2>

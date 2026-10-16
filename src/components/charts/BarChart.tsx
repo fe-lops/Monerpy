@@ -1,5 +1,5 @@
 import { brl } from "@/lib/domain/money";
-import { niceTop, short } from "./scale";
+import { equalColumns, niceTop, short } from "./scale";
 
 /** Barras verticais de uma série (ex.: gastos por categoria). */
 export function BarChart({ rows, label }: { rows: { name: string; total: number }[]; label: string }) {
@@ -15,7 +15,7 @@ export function BarChart({ rows, label }: { rows: { name: string; total: number 
             <span className="num absolute -top-[9px] left-0 w-[34px] bg-card text-[11px] leading-4 text-ink-2">{short(t)}</span>
           </div>
         ))}
-        <div className="absolute inset-y-0 left-10 right-0 flex gap-1">
+        <div className="absolute inset-y-0 left-10 right-0 gap-1" style={equalColumns(rows.length)}>
           {rows.map((r) => (
             <div key={r.name} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end">
               <div className="relative w-full max-w-[34px] rounded-t-md lg:max-w-[56px] bg-accent transition-[height] duration-500" style={{ height: `${(r.total / top) * 100}%` }}>
@@ -25,7 +25,7 @@ export function BarChart({ rows, label }: { rows: { name: string; total: number 
           ))}
         </div>
       </div>
-      <div className="ml-10 mt-2 flex gap-1">
+      <div className="ml-10 mt-2 gap-1" style={equalColumns(rows.length)}>
         {rows.map((r) => (
           <span key={r.name} className="min-w-0 flex-1 truncate text-center text-[11px] leading-[14px] text-ink-2" title={r.name}>
             {r.name}

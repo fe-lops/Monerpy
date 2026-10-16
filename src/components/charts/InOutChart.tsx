@@ -1,5 +1,5 @@
 import { brl } from "@/lib/domain/money";
-import { niceTop } from "./scale";
+import { equalColumns, niceTop } from "./scale";
 
 /** Barras duplas entrada x saída por mês. */
 export function InOutChart({ rows, label }: { rows: { label: string; income: number; expense: number }[]; label: string }) {
@@ -7,7 +7,7 @@ export function InOutChart({ rows, label }: { rows: { label: string; income: num
   const { top } = niceTop(max);
   return (
     <div role="img" aria-label={`${label}: ${rows.map((r) => `${r.label} entradas ${brl(r.income)}, saídas ${brl(r.expense)}`).join("; ")}`}>
-      <div className="mt-4 flex h-[150px] items-end gap-2 border-b border-line">
+      <div className="mt-4 h-[150px] items-end gap-2 border-b border-line" style={equalColumns(rows.length)}>
         {rows.map((r) => (
           <div key={r.label} className="flex h-full min-w-0 flex-1 items-end justify-center gap-[3px]">
             <div className="w-full max-w-[14px] rounded-t bg-[var(--pos-ink)]" style={{ height: `${(r.income / top) * 100}%` }} />
@@ -15,7 +15,7 @@ export function InOutChart({ rows, label }: { rows: { label: string; income: num
           </div>
         ))}
       </div>
-      <div className="mt-2 flex gap-2">
+      <div className="mt-2 gap-2" style={equalColumns(rows.length)}>
         {rows.map((r) => (
           <span key={r.label} className="min-w-0 flex-1 text-center text-[11px] leading-[14px] text-ink-2">
             {r.label}
