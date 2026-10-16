@@ -31,6 +31,8 @@ A segurança dos dados é garantida pelo **RLS do PostgreSQL**, não pelo fronte
 | `src/providers/` | Estado global: `DataProvider` (sessão, dados, ações) e `ToastProvider` (avisos). | `lib` |
 | `src/hooks/` | Hooks reutilizáveis entre telas (`useReminders`, `useMonthPeriod`). | `providers`, `lib/domain` |
 | `src/lib/domain/` | **Regras de negócio puras**, sem React e sem rede: tipos, dinheiro, datas, finanças, validação (Zod). Tudo testável. | apenas entre si |
+| `src/lib/domain/recurrence.ts` | Crédito: periodicidade, parcelar/repetir (total ou por cobrança) e fixa mensal (gera até 2 meses à frente; o `DataProvider` completa as que faltam a cada carregamento). | `lib/domain` |
+| `src/lib/ghost.ts` | Modo visitante (`/ghost-test-user`): cookie de sessão que faz `getRepo()` usar `LocalRepo` em memória com `demoDB()`. | — |
 | `src/lib/data/` | Acesso a dados. `repo.ts` define o contrato; `local.ts` e `supabase.ts` o implementam. | `lib/domain`, `lib/env` |
 | `src/lib/server/` | **Somente servidor** (`import "server-only"`): cliente Supabase com a chave `service_role`, envio de e-mail SMTP, modelos de e-mail e `requireAdmin`. Nunca importe em componente do navegador. | `lib/domain`, `lib/env` |
 | `src/app/api/` | Rotas do servidor: `POST /api/registro` (pedido público) e `/api/admin/registros` (somente administradores, via `Authorization: Bearer`). | `lib/server`, `lib/domain` |
@@ -72,6 +74,12 @@ não conhece React nem Supabase.
 | Nova tela | `src/app/(app)/<rota>/page.tsx`; item de menu em `components/layout/Sidebar.tsx` e/ou `BottomNav.tsx` |
 | Novo componente visual genérico | `components/ui/<Nome>.tsx` + export em `components/ui/index.ts` |
 | Mudar cores/tema | tokens em `src/app/globals.css` |
+
+## Usuário fantasma
+
+`/ghost-test-user` liga o modo visitante: `LocalRepo(memoryStore(demoDB))`, sem tocar no Supabase (o middleware
+apenas não redireciona para o login; sem sessão, o RLS bloqueia qualquer dado real). **Toda funcionalidade nova
+deve ganhar um exemplo em `buildDemoData` (`lib/data/seed.ts`).**
 
 ## Testes
 

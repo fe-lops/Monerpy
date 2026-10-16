@@ -8,6 +8,27 @@ for `0.x`, o app está em desenvolvimento e mudanças de comportamento podem aco
 
 ## [Não lançado]
 
+## [0.6.0] — 2026-10-17
+
+### Adicionado
+- **Parcelar no crédito** (Entrada e Saída), visível só com a forma **Crédito**: ao ativar, uma janela oferece
+  *Pagamento não recorrente*, *Parcelar ou repetir* e *Fixa mensal*. Fechar sem escolher — inclusive pelo botão/
+  gesto "voltar" do celular — cancela e desliga a opção.
+- **Parcelar ou repetir**: número de cobranças, valor como total (dividido) ou de cada cobrança e **Periodicidade**
+  (diário, semanal, quinzenal, mensal, bimestral, trimestral, semestral, anual ou personalizado em dias).
+- **Fixa mensal**: cobrança todo mês a partir da data escolhida; o app cria as próximas automaticamente (até 2 meses
+  à frente) e permite **Encerrar cobrança fixa** (cancela as futuras e mantém o histórico).
+- Nova lista de **50 categorias** (10 de entrada, 40 de saída), sem divisão profissional/pessoal.
+- Ícones 💼 Profissional e 👤 Pessoal no contexto do lançamento.
+- **Usuário fantasma** em `/ghost-test-user`: visitante com dados de exemplo em memória; nada é salvo.
+- O botão "voltar" do celular fecha janelas (filtros, baixa, categorias, registros…) em vez de sair da página.
+- Migration `20261017000000_credit_groups_and_categories.sql`.
+
+### Alterado
+- Forma de pagamento fica logo abaixo da Categoria no novo lançamento.
+- O teclado não abre mais sozinho ao entrar em "Novo lançamento".
+- Categorias padrão antigas sem nenhum lançamento são arquivadas (podem ser reativadas em Categorias).
+
 ## [0.5.0] — 2026-10-16
 
 ### Adicionado
@@ -85,7 +106,8 @@ for `0.x`, o app está em desenvolvimento e mudanças de comportamento podem aco
   exportação CSV e configurações.
 - Regras financeiras do PRD com testes; camada de dados local e Supabase (RLS).
 
-[Não lançado]: https://github.com/fe-lops/Monerpy/compare/v0.5.0...HEAD
+[Não lançado]: https://github.com/fe-lops/Monerpy/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/fe-lops/Monerpy/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/fe-lops/Monerpy/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/fe-lops/Monerpy/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/fe-lops/Monerpy/compare/v0.3.0...v0.4.0

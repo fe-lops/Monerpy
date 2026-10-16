@@ -33,6 +33,23 @@ Serve para desenvolver e demonstrar (há a opção "Explorar com dados de exempl
    (*Project Settings → API*). Nunca use a chave `service_role` no frontend.
 6. Reinicie `npm run dev`. A tela de login passa a pedir e-mail e senha.
 
+## Migrations do banco
+
+Rode cada arquivo de `supabase/migrations/`, em ordem, no **SQL Editor** do Supabase (uma vez cada):
+
+| Arquivo | Versão | O que faz |
+|---|---|---|
+| `20261015000000_init.sql` | 0.1 | Tabelas, RLS, categorias iniciais, parcelamento |
+| `20261016000000_registration_requests.sql` | 0.4 | Pedidos de registro e administradores |
+| `20261017000000_credit_groups_and_categories.sql` | 0.6 | Crédito: parcelar/repetir com periodicidade e fixa mensal; nova lista de categorias |
+
+## Usuário fantasma (demonstração)
+
+`https://SUA-URL/ghost-test-user` abre o app como **visitante**, com dados de exemplo que mostram todas as
+funcionalidades. Tudo roda na memória do navegador: nada vai para o Supabase e atualizar a página restaura o
+exemplo. O link não aparece em buscadores. Para sair, toque em **Sair** na faixa do topo.
+Ao criar uma funcionalidade nova, inclua um exemplo dela em `buildDemoData` (`src/lib/data/seed.ts`).
+
 ## Configurar SMTP (e-mails sem limite de 2 por hora)
 
 O e-mail padrão do Supabase envia **no máximo 2 e-mails de autenticação por hora para o projeto inteiro**
