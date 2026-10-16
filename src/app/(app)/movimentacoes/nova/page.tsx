@@ -8,7 +8,7 @@ import { PageHeader, Screen } from "@/components/ui";
 function NovaInner() {
   const tipo = useSearchParams().get("tipo");
   return (
-    <Screen>
+    <Screen size="narrow">
       <PageHeader title="Novo lançamento" back={true} />
       <TransactionForm initialType={tipo === "entrada" ? "INCOME" : "EXPENSE"} />
     </Screen>

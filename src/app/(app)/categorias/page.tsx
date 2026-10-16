@@ -91,7 +91,7 @@ export default function CategoriasPage() {
   const editingCat = draft?.id ? categories.find((c) => c.id === draft.id) : undefined;
 
   return (
-    <Screen>
+    <Screen size="wide">
       <PageHeader
         title="Categorias"
         back="/mais"
@@ -109,6 +109,7 @@ export default function CategoriasPage() {
           </button>
         }
       />
+      <div className="lg:max-w-[360px]">
       <Seg
         label="Tipo"
         value={type}
@@ -118,6 +119,8 @@ export default function CategoriasPage() {
           ["INCOME", "Entradas"],
         ]}
       />
+      </div>
+      <div className="grid items-start gap-5 lg:grid-cols-2 lg:gap-6">
       {(["BUSINESS", "PERSONAL"] as Scope[]).map((s) => {
         const items = active.filter((c) => c.default_scope === s);
         return (
@@ -127,6 +130,7 @@ export default function CategoriasPage() {
           </section>
         );
       })}
+      </div>
       {archived.length > 0 && (
         <section className="flex flex-col gap-2.5">
           <SectionTitle right={`${archived.length}`}>Arquivadas</SectionTitle>

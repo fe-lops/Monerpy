@@ -21,9 +21,13 @@ export default function RelatoriosPage() {
   const pend = pendingTotals(transactions, today, "ALL");
 
   return (
-    <Screen>
+    <Screen size="wide">
       <PageHeader title="Relatórios" back="/mais" />
-      <ScopeSeg value={scope} onChange={setScope} />
+      <div className="lg:max-w-[420px]">
+        <ScopeSeg value={scope} onChange={setScope} />
+      </div>
+
+      <div className="grid items-start gap-5 lg:grid-cols-2 lg:gap-6">
 
       <section className="panel p-4">
         <h2 className="sub">Entradas x saídas realizadas</h2>
@@ -99,6 +103,7 @@ export default function RelatoriosPage() {
           <p className="cap mt-1">Estimativa: saldo + a receber − a pagar. Não é garantia de saldo futuro.</p>
         </div>
       </section>
+      </div>
     </Screen>
   );
 }

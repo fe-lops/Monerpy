@@ -32,7 +32,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Navegação principal"
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-[var(--bg-nav)] px-1 pb-[calc(10px+env(safe-area-inset-bottom))] pt-2.5"
+      className="fixed inset-x-0 bottom-0 z-30 border-t lg:hidden border-line bg-[var(--bg-nav)] px-1 pb-[calc(10px+env(safe-area-inset-bottom))] pt-2.5"
     >
       <div className="mx-auto grid max-w-[480px] grid-cols-5">
         {item(ITEMS[0])}

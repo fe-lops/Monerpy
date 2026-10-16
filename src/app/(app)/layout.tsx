@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { BottomNav } from "@/components/BottomNav";
+import { Sidebar } from "@/components/Sidebar";
 import { useData } from "@/components/providers/DataProvider";
 import { Screen, Spinner } from "@/components/ui";
 
@@ -33,12 +34,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
   if (status !== "ready" || !profile || (!profile.onboarded && !onboarding)) return <Spinner />;
 
-  // Telas de tarefa focada (configuração inicial e novo lançamento) ficam sem a barra inferior.
-  const showNav = !onboarding && !path.startsWith("/movimentacoes/nova");
+  if (onboarding) return <>{children}</>;
+
+  // Celular: barra inferior (oculta em telas de tarefa focada, como novo lançamento).
+  // Computador (lg): barra lateral fixa sempre visível.
+  const showBottomNav = !path.startsWith("/movimentacoes/nova");
   return (
-    <div className={showNav ? "pb-[96px]" : ""}>
+    <div className={`lg:pl-64 ${showBottomNav ? "pb-[96px] lg:pb-0" : ""}`}>
+      <Sidebar />
       {children}
-      {showNav && <BottomNav />}
+      {showBottomNav && <BottomNav />}
     </div>
   );
 }

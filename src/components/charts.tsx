@@ -33,7 +33,7 @@ export function BarChart({ rows, label }: { rows: { name: string; total: number 
         <div className="absolute inset-y-0 left-10 right-0 flex gap-1">
           {rows.map((r) => (
             <div key={r.name} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end">
-              <div className="relative w-full max-w-[34px] rounded-t-md bg-accent transition-[height] duration-500" style={{ height: `${(r.total / top) * 100}%` }}>
+              <div className="relative w-full max-w-[34px] rounded-t-md lg:max-w-[56px] bg-accent transition-[height] duration-500" style={{ height: `${(r.total / top) * 100}%` }}>
                 <b className="num absolute -top-[18px] left-1/2 -translate-x-1/2 whitespace-nowrap text-[11px] font-medium leading-4">{short(r.total)}</b>
               </div>
             </div>

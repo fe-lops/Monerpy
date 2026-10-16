@@ -21,7 +21,7 @@ export default function ParcelamentoPage() {
 
   if (!parts.length) {
     return (
-      <Screen>
+      <Screen size="narrow">
         <PageHeader title="Parcelamento" back="/movimentacoes" />
         <Empty>Compra parcelada não encontrada.</Empty>
       </Screen>
@@ -35,7 +35,7 @@ export default function ParcelamentoPage() {
   const name = parts[0].description.replace(/\s*\(\d+\/\d+\)$/, "");
 
   return (
-    <Screen>
+    <Screen size="narrow">
       <PageHeader title="Parcelamento" back={true} />
       <section className="panel flex flex-col gap-3 p-4">
         <div>
