@@ -8,6 +8,21 @@ for `0.x`, o app está em desenvolvimento e mudanças de comportamento podem aco
 
 ## [Não lançado]
 
+## [0.4.0] — 2026-10-16
+
+### Adicionado
+- **Solicitação de registro com aprovação**: aba "Registrar" ao lado de "Entrar"; a pessoa informa o
+  e-mail e vê a confirmação de envio. Administradores aprovam ou recusam em **Registros**.
+  Aprovado: e-mail com link para criar a senha (`/definir-senha`, funciona em qualquer navegador).
+  Recusado: e-mail de recusa com motivo opcional. Aviso opcional ao administrador a cada novo pedido.
+- Migration `20261016000000_registration_requests.sql`: tabela de pedidos, `profiles.is_admin`, RLS e
+  privilégios por coluna (a usuária não pode se tornar administradora).
+- Rotas do servidor (`/api/registro`, `/api/admin/registros`) e envio de e-mail por SMTP (`nodemailer`).
+- Guia de SMTP no README para tirar o limite de 2 e-mails/hora do Supabase.
+
+### Corrigido
+- `next.config.ts` lia o `package.json` por caminho relativo e falhava fora da pasta do projeto.
+
 ## [0.3.0] — 2026-10-15
 
 ### Adicionado
@@ -47,7 +62,8 @@ for `0.x`, o app está em desenvolvimento e mudanças de comportamento podem aco
   exportação CSV e configurações.
 - Regras financeiras do PRD com testes; camada de dados local e Supabase (RLS).
 
-[Não lançado]: https://github.com/fe-lops/Monerpy/compare/v0.3.0...HEAD
+[Não lançado]: https://github.com/fe-lops/Monerpy/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/fe-lops/Monerpy/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/fe-lops/Monerpy/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/fe-lops/Monerpy/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/fe-lops/Monerpy/releases/tag/v0.1.0

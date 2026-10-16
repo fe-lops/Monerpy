@@ -32,9 +32,15 @@ A segurança dos dados é garantida pelo **RLS do PostgreSQL**, não pelo fronte
 | `src/hooks/` | Hooks reutilizáveis entre telas (`useReminders`, `useMonthPeriod`). | `providers`, `lib/domain` |
 | `src/lib/domain/` | **Regras de negócio puras**, sem React e sem rede: tipos, dinheiro, datas, finanças, validação (Zod). Tudo testável. | apenas entre si |
 | `src/lib/data/` | Acesso a dados. `repo.ts` define o contrato; `local.ts` e `supabase.ts` o implementam. | `lib/domain`, `lib/env` |
+| `src/lib/server/` | **Somente servidor** (`import "server-only"`): cliente Supabase com a chave `service_role`, envio de e-mail SMTP, modelos de e-mail e `requireAdmin`. Nunca importe em componente do navegador. | `lib/domain`, `lib/env` |
+| `src/app/api/` | Rotas do servidor: `POST /api/registro` (pedido público) e `/api/admin/registros` (somente administradores, via `Authorization: Bearer`). | `lib/server`, `lib/domain` |
 | `src/lib/env.ts` | Leitura e validação das variáveis `NEXT_PUBLIC_SUPABASE_*`. | — |
 | `src/middleware.ts` | Renova a sessão e protege rotas quando o Supabase está configurado. | `lib/env` |
 | `supabase/migrations/` | Esquema SQL versionado: tabelas, constraints, RLS, gatilhos e funções. | — |
+
+Fluxo do registro com aprovação: `/registro` → `POST /api/registro` (grava em `registration_requests`)
+→ administrador em `/admin/registros` → `POST /api/admin/registros/:id` → aprovar: cria a conta e envia link
+`/definir-senha?token_hash=…`; recusar: envia e-mail de recusa.
 
 Regra de ouro: **dependências apontam para baixo** (`app → components → providers → lib`). `lib/domain`
 não conhece React nem Supabase.
@@ -52,6 +58,9 @@ não conhece React nem Supabase.
   usam classes do Design System (`.panel`, `.seg`, `.cta`…) e utilitários Tailwind. Celular primeiro;
   `lg:` (≥ 1024 px) para computador.
 - **Idempotência**: lançamentos e parcelamentos recebem `id` gerado no cliente; reenviar não duplica.
+- **Segredos só no servidor**: variáveis sem `NEXT_PUBLIC_` (ex.: `SUPABASE_SERVICE_ROLE_KEY`, `SMTP_PASS`)
+  são lidas apenas em `lib/server/config.ts`. Administradores são definidos no banco (`profiles.is_admin`),
+  e a usuária não consegue alterar essa coluna (privilégios por coluna na migration).
 - **Nada é apagado**: lançamentos são cancelados (`status = CANCELLED`), preservando o histórico.
 
 ## Onde mexer para…

@@ -33,11 +33,50 @@ Serve para desenvolver e demonstrar (há a opção "Explorar com dados de exempl
    (*Project Settings → API*). Nunca use a chave `service_role` no frontend.
 6. Reinicie `npm run dev`. A tela de login passa a pedir e-mail e senha.
 
+## Configurar SMTP (e-mails sem limite de 2 por hora)
+
+O e-mail padrão do Supabase envia **no máximo 2 e-mails de autenticação por hora para o projeto inteiro**
+(recuperação de senha, convites), sem opção de aumentar. Com um SMTP próprio esse limite passa a ser
+configurável e o intervalo mínimo por usuário cai para cerca de 60 segundos. O mesmo SMTP é usado pelo app
+nos e-mails de aprovação/recusa de registro.
+
+**Exemplo com Gmail** (até ~500 e-mails/dia):
+1. Ative a verificação em duas etapas na conta Google e crie uma **senha de app** em
+   <https://myaccount.google.com/apppasswords> (16 caracteres).
+2. **Supabase → Authentication → Emails → SMTP Settings → Enable custom SMTP:**
+   host `smtp.gmail.com`, porta `465`, usuário = seu Gmail, senha = senha de app,
+   remetente = seu Gmail, nome = `Monerpy`.
+3. **Supabase → Authentication → Rate Limits:** aumente *Rate limit for sending emails* (ex.: 30 por hora).
+4. **Vercel → Environment Variables:** `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` (Sensitive) e
+   `SMTP_FROM` com os mesmos dados; depois, Redeploy.
+
+Outras opções: Brevo (`smtp-relay.brevo.com`, porta `587`, 300 e-mails/dia grátis) ou Resend (exige domínio próprio).
+
+## Registro com aprovação do administrador
+
+Novas usuárias tocam em **Registrar**, informam o e-mail e o pedido fica pendente. Um administrador aprova ou
+recusa em **Registros** (barra lateral / Mais). Aprovado: a pessoa recebe um link para criar a senha
+(funciona em qualquer navegador). Recusado: recebe um e-mail de recusa, com motivo opcional.
+
+1. Rode `supabase/migrations/20261016000000_registration_requests.sql` no **SQL Editor**.
+2. Torne sua conta administradora (troque o e-mail) e rode no SQL Editor:
+   ```sql
+   update public.profiles set is_admin = true
+   where user_id = (select id from auth.users where email = 'seu-email@exemplo.com');
+   ```
+3. **Vercel → Environment Variables:** `SUPABASE_SERVICE_ROLE_KEY` (Supabase → API Keys → *service_role / secret*),
+   marcada como **Sensitive** e **sem** prefixo `NEXT_PUBLIC_`. Opcional: `ADMIN_EMAIL` (aviso de novos pedidos)
+   e `APP_URL` (URL pública para os links).
+4. Configure o SMTP (seção acima) e faça **Redeploy**.
+5. Em **Authentication → URL Configuration → Redirect URLs**, adicione `https://SUA-URL/definir-senha`.
+
+Sem SMTP, a aprovação usa o convite padrão do Supabase (sujeito ao limite de 2/hora) e a recusa não envia e-mail.
+
 ## Estrutura
 
 ```
 src/
-  app/                  rotas (App Router). (app)/ = área autenticada
+  app/                  rotas (App Router). (app)/ = área autenticada; api/ = rotas do servidor
   components/
     ui/                 peças visuais genéricas do Design System
     layout/             Sidebar (computador), BottomNav (celular), AuthCard
@@ -48,6 +87,7 @@ src/
   lib/
     domain/             regras de negócio puras + testes (saldo, parcelas, CSV…)
     data/               acesso a dados: LocalRepo (navegador) e SupabaseRepo
+    server/             SÓ servidor: cliente admin (service_role), e-mails SMTP, guarda de admin
     env.ts              leitura/validação das variáveis do Supabase
   middleware.ts         protege rotas quando o Supabase está configurado
 supabase/migrations/    esquema SQL versionado com RLS
