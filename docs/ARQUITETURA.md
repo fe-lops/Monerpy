@@ -59,6 +59,13 @@ não conhece React nem Supabase.
 - **Estilos**: tokens de cor em `src/app/globals.css` (`:root` e `[data-theme="light"]`); componentes
   usam classes do Design System (`.panel`, `.seg`, `.cta`…) e utilitários Tailwind. Celular primeiro;
   `lg:` (≥ 1024 px) para computador.
+- **Layout no celular nunca transborda** (largura mínima 360 px):
+  - Grade (`grid`) sempre com colunas definidas também no celular: `grid-cols-1` / `grid-cols-2`
+    (o Tailwind gera `minmax(0, 1fr)`). Grade sem colunas cria uma coluna "auto" que cresce até o
+    maior texto sem quebra e alarga a página — foi a causa do layout "encolhido" no celular (v0.7.0).
+  - Linhas de itens iguais com texto (rótulos de gráfico) usam `equalColumns(n)` de `components/charts/scale.ts`.
+  - Rede de segurança em `globals.css`: `overflow-x: clip` em `html/body` e `min-width: 0` nos filhos de `.grid`.
+  - Em desenvolvimento, `OverflowGuard` avisa no console (`[layout] …`) qual elemento passou da tela.
 - **Idempotência**: lançamentos e parcelamentos recebem `id` gerado no cliente; reenviar não duplica.
 - **Segredos só no servidor**: variáveis sem `NEXT_PUBLIC_` (ex.: `SUPABASE_SERVICE_ROLE_KEY`, `SMTP_PASS`)
   são lidas apenas em `lib/server/config.ts`. Administradores são definidos no banco (`profiles.is_admin`),
