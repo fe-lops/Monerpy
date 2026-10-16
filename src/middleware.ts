@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { isSupabaseConfigured, SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/env";
 
 const PUBLIC = ["/login", "/recuperar-senha", "/redefinir-senha"];
 
@@ -8,9 +9,9 @@ const PUBLIC = ["/login", "/recuperar-senha", "/redefinir-senha"];
  * autenticada para quem não está logado. Sem Supabase (modo local), não faz nada.
  */
 export async function middleware(request: NextRequest) {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) return NextResponse.next();
+  if (!isSupabaseConfigured) return NextResponse.next();
+  const url = SUPABASE_URL;
+  const key = SUPABASE_ANON_KEY;
 
   let response = NextResponse.next({ request });
   const supabase = createServerClient(url, key, {

@@ -83,7 +83,7 @@ export default function ConfiguracoesPage() {
   }
 
   return (
-    <Screen>
+    <Screen size="narrow">
       <PageHeader title="Configurações" back="/mais" />
 
       <form className="flex flex-col gap-4" onSubmit={saveProfile} noValidate>

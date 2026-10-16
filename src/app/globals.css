@@ -398,6 +398,18 @@ body {
 .anim-fade {
   animation: fade-in 0.22s ease;
 }
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+/* No computador a folha vira modal: entra com um leve "pop" em vez de subir da base. */
+@media (min-width: 1024px) {
+  .anim-sheet {
+    animation: pop-in 0.2s ease;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

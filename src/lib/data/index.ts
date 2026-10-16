@@ -3,9 +3,9 @@ import { LocalRepo } from "./local";
 import type { Repo } from "./repo";
 import { SupabaseRepo } from "./supabase";
 
-export const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-export const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
-export const isSupabaseConfigured = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+import { isSupabaseConfigured, SUPABASE_ANON_KEY, SUPABASE_URL } from "../env";
+
+export { isSupabaseConfigured, missingSupabaseEnv } from "../env";
 
 let repo: Repo | null = null;
 

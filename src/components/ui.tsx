@@ -7,9 +7,19 @@ import { ChevronLeft, X } from "lucide-react";
 import { maskBRLInput, brl } from "@/lib/money";
 import type { ScopeFilter } from "@/lib/types";
 
-/** Contêiner de tela: largura de celular, centralizado em telas maiores. */
-export function Screen({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <main className={`mx-auto flex w-full max-w-[480px] flex-col gap-5 px-5 pb-12 pt-4 ${className}`}>{children}</main>;
+const SCREEN_WIDTH = {
+  narrow: "lg:max-w-[640px]", // formulários e detalhes
+  default: "lg:max-w-[960px]", // listas
+  wide: "lg:max-w-[1200px]", // painéis em grade
+};
+
+/** Contêiner de tela: largura de celular; no computador, largura conforme o tipo de tela. */
+export function Screen({ children, className = "", size = "default" }: { children: React.ReactNode; className?: string; size?: keyof typeof SCREEN_WIDTH }) {
+  return (
+    <main className={`mx-auto flex w-full max-w-[480px] flex-col gap-5 px-5 pb-12 pt-4 md:max-w-[640px] lg:gap-6 lg:px-10 lg:pb-16 lg:pt-8 ${SCREEN_WIDTH[size]} ${className}`}>
+      {children}
+    </main>
+  );
 }
 
 export function PageHeader({ title, back, right }: { title: string; back?: string | true; right?: React.ReactNode }) {
@@ -42,7 +52,7 @@ const SCOPES: [ScopeFilter, string][] = [
 
 export function ScopeSeg({ value, onChange, small }: { value: ScopeFilter; onChange: (s: ScopeFilter) => void; small?: boolean }) {
   return (
-    <div className={`seg ${small ? "sm" : ""}`} role="group" aria-label="Contexto">
+    <div className={`seg ${small ? "sm" : ""} lg:max-w-[420px]`} role="group" aria-label="Contexto">
       {SCOPES.map(([v, label]) => (
         <button key={v} type="button" aria-pressed={value === v} onClick={() => onChange(v)}>
           {label}
@@ -152,7 +162,8 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
   }, [open, onClose]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-40">
+    // Celular: folha que sobe da base. Computador: modal centralizado.
+    <div className="fixed inset-0 z-40 flex items-end justify-center lg:items-center lg:p-6">
       <div className="anim-fade absolute inset-0" style={{ background: "var(--scrim)" }} onClick={onClose} />
       <div
         ref={ref}
@@ -160,7 +171,7 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="anim-sheet absolute inset-x-0 bottom-0 mx-auto flex max-h-[92dvh] w-full max-w-[480px] flex-col gap-4 overflow-y-auto rounded-t-3xl border-t border-line bg-card px-5 pb-[calc(24px+env(safe-area-inset-bottom))] pt-5 outline-none"
+        className="anim-sheet relative flex max-h-[92dvh] w-full max-w-[480px] flex-col gap-4 overflow-y-auto rounded-t-3xl border-t border-line bg-card px-5 pb-[calc(24px+env(safe-area-inset-bottom))] pt-5 outline-none md:max-w-[560px] lg:max-h-[85dvh] lg:rounded-3xl lg:border lg:px-7 lg:pb-7 lg:pt-6 lg:shadow-[0_30px_80px_rgb(0_0_0/.45)]"
       >
         <div className="flex items-center justify-between gap-3">
           <h2 className="font-display text-2xl font-bold">{title}</h2>

@@ -26,7 +26,7 @@ export default function MovimentacaoPage() {
 
   if (!tx) {
     return (
-      <Screen>
+      <Screen size="narrow">
         <PageHeader title="Movimentação" back="/movimentacoes" />
         <Empty>Movimentação não encontrada.</Empty>
       </Screen>
@@ -35,7 +35,7 @@ export default function MovimentacaoPage() {
 
   if (editing) {
     return (
-      <Screen>
+      <Screen size="narrow">
         <PageHeader title="Editar" back={true} />
         <TransactionForm editing={tx} />
         <button type="button" className="btn-ghost" onClick={() => setEditing(false)}>
@@ -75,7 +75,7 @@ export default function MovimentacaoPage() {
   if (tx.cancelled_at) rows.push(["Cancelado em", dmy(tx.cancelled_at.slice(0, 10))]);
 
   return (
-    <Screen>
+    <Screen size="narrow">
       <PageHeader title={income ? "Entrada" : "Saída"} back={true} />
 
       <section className="panel flex flex-col items-center gap-1 px-4 py-6 text-center">

@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { AuthCard } from "@/components/AuthCard";
 import { useData } from "@/components/providers/DataProvider";
 import { Field, Spinner } from "@/components/ui";
+import { missingSupabaseEnv } from "@/lib/env";
 import { loginSchema, type LoginInput } from "@/lib/schemas";
 
 function LoginForm() {
@@ -41,9 +42,17 @@ function LoginForm() {
       <AuthCard title="Bem-vinda ao Monerpy" subtitle="Controle de caixa pessoal e profissional, direto do celular.">
         <div className="panel flex flex-col gap-2 p-4 text-sm">
           <strong className="font-semibold">Modo local</strong>
+          <p className="text-ink-2">O Supabase não foi configurado neste build. Os dados ficam salvos apenas neste navegador.</p>
+          <p className="text-ink-2">Variáveis ausentes no build:</p>
+          <ul className="flex flex-col gap-1">
+            {missingSupabaseEnv.map((v) => (
+              <li key={v}>
+                <code className="rounded bg-input px-1.5 py-0.5 text-xs">{v}</code>
+              </li>
+            ))}
+          </ul>
           <p className="text-ink-2">
-            O Supabase ainda não foi configurado. Os dados ficam salvos apenas neste navegador. Configure o arquivo <code>.env.local</code> para ativar login e banco
-            de dados.
+            Local: preencha o <code>.env.local</code> e reinicie. Vercel: cadastre em Settings → Environment Variables (marcando Production) e faça um novo deploy.
           </p>
         </div>
         <button className="cta" onClick={() => signIn("", "")}>

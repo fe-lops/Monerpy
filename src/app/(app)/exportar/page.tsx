@@ -50,7 +50,7 @@ function ExportInner() {
   }
 
   return (
-    <Screen>
+    <Screen size="narrow">
       <PageHeader title="Exportar CSV" back={true} />
       {fromUrl && <p className="cap -mt-2">Filtros trazidos do histórico. Ajuste se quiser.</p>}
       <ScopeSeg value={f.scope} onChange={(s) => set({ scope: s })} />
