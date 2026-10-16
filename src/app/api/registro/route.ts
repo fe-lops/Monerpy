@@ -4,7 +4,10 @@ import { serverConfig } from "@/lib/server/config";
 import { adminNoticeEmail } from "@/lib/server/emails";
 import { appUrl, handle } from "@/lib/server/http";
 import { isSmtpConfigured, sendMail } from "@/lib/server/mailer";
-import { ApiError, supabaseAdmin } from "@/lib/server/supabaseAdmin";
+import { ApiError, assertKeyAccepted, isMissingTable, supabaseAdmin } from "@/lib/server/supabaseAdmin";
+
+/** Mensagem pública: detalhes de configuração aparecem só para administradores e nos logs. */
+const UNAVAILABLE = "Registro indisponível no momento por um problema de configuração. Tente mais tarde ou avise o administrador.";
 
 /**
  * POST /api/registro — visitante pede acesso informando o e-mail.
@@ -17,11 +20,19 @@ export async function POST(request: Request) {
     if (parsed.data.website) return NextResponse.json({ ok: true }); // robô preencheu o campo-armadilha
 
     const { email } = parsed.data;
-    const { error } = await supabaseAdmin().from("registration_requests").insert({ email });
+    let error: { code?: string; message: string } | null;
+    try {
+      ({ error } = await supabaseAdmin().from("registration_requests").insert({ email }));
+      assertKeyAccepted(error);
+    } catch (e) {
+      console.error("[registro] configuração", e instanceof Error ? e.message : e);
+      throw new ApiError(503, UNAVAILABLE);
+    }
 
     // 23505 = já existe um pedido pendente para este e-mail: tratamos como sucesso.
     if (error && error.code !== "23505") {
-      console.error("[registro]", error);
+      console.error("[registro] insert", error.code, error.message);
+      if (isMissingTable(error)) throw new ApiError(503, UNAVAILABLE); // migration de registro não executada
       throw new ApiError(500, "Não foi possível registrar o pedido. Tente novamente.");
     }
 

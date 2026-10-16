@@ -1,3 +1,5 @@
+import { isSecretKey } from "./supabaseKeys";
+
 // Variáveis públicas do Supabase. O Next.js as embute no código DURANTE O BUILD,
 // por isso cada referência precisa ser literal (process.env.NOME) e qualquer
 // mudança na Vercel exige um novo deploy.
@@ -27,18 +29,6 @@ export function normalizeSupabaseUrl(raw: string): string {
     return u.origin; // descarta caminhos como /rest/v1 e a barra final
   } catch {
     return "";
-  }
-}
-
-/** Chave secreta: "sb_secret_…" ou JWT antigo com role "service_role". Nunca deve ir para o navegador. */
-function isSecretKey(v: string): boolean {
-  if (v.startsWith("sb_secret_")) return true;
-  if (!v.startsWith("eyJ")) return false;
-  try {
-    const payload = JSON.parse(atob(v.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
-    return payload?.role === "service_role";
-  } catch {
-    return false;
   }
 }
 
