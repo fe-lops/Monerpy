@@ -5,4 +5,4 @@ export { useSettleFlow } from "./useSettleFlow";
 export { TransactionForm } from "./TransactionForm";
 export { PendingScreen } from "./PendingScreen";
 export { TxTypeToggle } from "./TxTypeToggle";
-export { CreditModeSheet, CREDIT_MODE_LABEL, type CreditMode } from "./CreditModeSheet";
+export { CreditModePicker, CREDIT_MODE_LABEL, type CreditMode } from "./CreditModePicker";

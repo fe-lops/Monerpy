@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { CreditCard } from "lucide-react";
 import { Field, MoneyInput, Seg, Sheet } from "@/components/ui";
 import { newId } from "@/lib/data";
 import { addMonths, dmy } from "@/lib/domain/dates";
@@ -13,7 +12,7 @@ import { fieldErrors, groupSchema, transactionSchema, type TransactionInput } fr
 import { PERIODICITY_LABEL, type PaymentMethod, type Periodicity, type Scope, type Transaction, type TxType } from "@/lib/domain/types";
 import { useReady } from "@/providers/DataProvider";
 import { useToast } from "@/providers/ToastProvider";
-import { CREDIT_MODE_LABEL, CreditModeSheet, type CreditMode } from "./CreditModeSheet";
+import { CreditModePicker, type CreditMode } from "./CreditModePicker";
 import { TxTypeToggle } from "./TxTypeToggle";
 
 const METHODS_ALL: [PaymentMethod, string][] = [
@@ -62,9 +61,8 @@ export function TransactionForm({ initialType = "EXPENSE", editing }: Props) {
   const [notes, setNotes] = useState(editing?.notes ?? "");
 
   // ---- crédito: parcelar/repetir ou fixa mensal ----
-  const [creditOn, setCreditOn] = useState(false);
+  /** Tipo de cobrança no crédito; null quando a forma não é Crédito. */
   const [creditMode, setCreditMode] = useState<CreditMode | null>(null);
-  const [chooserOpen, setChooserOpen] = useState(false);
   const [count, setCount] = useState("2");
   const [periodicity, setPeriodicity] = useState<Periodicity>("MONTHLY");
   const [customDays, setCustomDays] = useState("30");
@@ -79,7 +77,7 @@ export function TransactionForm({ initialType = "EXPENSE", editing }: Props) {
   const isParcel = !!editing?.installment_group_id;
   const income = type === "INCOME";
   /** Parcelado/repetido ou fixa mensal: gera várias cobranças em vez de um lançamento. */
-  const groupMode: "INSTALLMENT" | "FIXED" | null = creditOn && (creditMode === "INSTALLMENT" || creditMode === "FIXED") ? creditMode : null;
+  const groupMode: "INSTALLMENT" | "FIXED" | null = creditMode === "INSTALLMENT" || creditMode === "FIXED" ? creditMode : null;
   const countNum = Number(count) || 0;
   const daysNum = periodicity === "CUSTOM" ? Number(customDays) || 0 : null;
 
@@ -92,15 +90,10 @@ export function TransactionForm({ initialType = "EXPENSE", editing }: Props) {
     [categories, type, editing?.category_id],
   );
 
-  function resetCredit() {
-    setCreditOn(false);
-    setCreditMode(null);
-  }
-
   function changeType(t: TxType) {
     setType(t);
     setCategoryId("");
-    resetCredit();
+    setCreditMode(method === "CREDIT_CARD" ? "SINGLE" : null);
     setStatus(t === "INCOME" ? "PENDING" : "SETTLED");
     setRefDate(t === "INCOME" ? "" : today);
     if (t === "EXPENSE" && method === "UNSPECIFIED") setMethod("PIX");
@@ -109,24 +102,12 @@ export function TransactionForm({ initialType = "EXPENSE", editing }: Props) {
 
   function changeMethod(m: PaymentMethod) {
     setMethod(m);
-    if (m !== "CREDIT_CARD") resetCredit(); // "Parcelar no crédito" só existe com Crédito
+    // Os modos de cobrança só existem com Crédito; ao escolhê-lo, começa em "não recorrente".
+    setCreditMode(m === "CREDIT_CARD" ? (creditMode ?? "SINGLE") : null);
   }
 
-  function toggleCredit() {
-    if (creditOn) return resetCredit();
-    setCreditOn(true);
-    setChooserOpen(true);
-  }
-
-  /** Fechou a janela sem escolher: cancela e desliga a opção (só se ainda não havia escolha). */
-  function closeChooser() {
-    setChooserOpen(false);
-    if (!creditMode) setCreditOn(false);
-  }
-
-  function chooseMode(m: CreditMode) {
+  function changeCreditMode(m: CreditMode) {
     setCreditMode(m);
-    setChooserOpen(false);
     setErrors({});
   }
 
@@ -311,24 +292,11 @@ export function TransactionForm({ initialType = "EXPENSE", editing }: Props) {
         {errors.payment_method && <p className="error mt-1.5">{errors.payment_method}</p>}
       </div>
 
-      {/* "Parcelar no crédito": só com Crédito selecionado e em lançamento novo. */}
-      {method === "CREDIT_CARD" && !editing && (
-        <div className="panel flex flex-col">
-          <button type="button" role="switch" aria-checked={creditOn} onClick={toggleCredit} className="flex items-center justify-between gap-3 p-4 text-left">
-            <span className="flex min-w-0 items-center gap-3">
-              <CreditCard size={22} className="flex-none text-ink-2" aria-hidden />
-              <span className="flex flex-col">
-                <span className="font-medium">Parcelar no crédito</span>
-                <span className="row-sub">{creditOn && creditMode ? CREDIT_MODE_LABEL[creditMode] : "Parcelas, repetição ou cobrança fixa"}</span>
-              </span>
-            </span>
-            <span className="switch" data-on={creditOn} aria-hidden />
-          </button>
-          {creditOn && creditMode && (
-            <button type="button" className="linkbtn self-start px-4 pb-3 pt-0" onClick={() => setChooserOpen(true)}>
-              Alterar tipo de cobrança
-            </button>
-          )}
+      {/* Tipo de cobrança: só com Crédito selecionado e em lançamento novo. */}
+      {method === "CREDIT_CARD" && !editing && creditMode && (
+        <div>
+          <span className="flabel">Tipo de cobrança no crédito</span>
+          <CreditModePicker value={creditMode} onChange={changeCreditMode} />
         </div>
       )}
 
@@ -484,8 +452,6 @@ export function TransactionForm({ initialType = "EXPENSE", editing }: Props) {
       <button type="submit" className="cta cta-tx" disabled={busy}>
         {editing ? "Salvar alterações" : groupMode ? "Revisar cobranças" : "Confirmar"}
       </button>
-
-      <CreditModeSheet open={chooserOpen} current={creditMode} onChoose={chooseMode} onClose={closeChooser} />
 
       <Sheet open={confirming} onClose={() => setConfirming(false)} title={groupMode === "FIXED" ? "Confirmar cobrança fixa" : "Confirmar cobranças"}>
         {groupMode === "FIXED" ? (
