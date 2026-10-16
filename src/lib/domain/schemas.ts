@@ -49,14 +49,28 @@ export const transactionSchema = z
   });
 export type TransactionInput = z.infer<typeof transactionSchema>;
 
-export const installmentSchema = z.object({
-  description: z.string().trim().min(1, "Descreva a compra.").max(60, "Use até 60 caracteres."),
-  total_amount: cents,
-  installment_count: z.number().int().min(2, "Mínimo de 2 parcelas.").max(48, "Máximo de 48 parcelas."),
-  first_due_date: isoDate,
-  scope: z.enum(["BUSINESS", "PERSONAL"]),
-  category_id: z.string().min(1, "Escolha uma categoria."),
-});
+/** Cobranças no crédito: parcelar/repetir (com periodicidade) ou fixa mensal. */
+export const groupSchema = z
+  .object({
+    kind: z.enum(["INSTALLMENT", "FIXED"]),
+    description: z.string().trim().min(1, "Descreva a cobrança.").max(60, "Use até 60 caracteres."),
+    amount: cents,
+    amount_mode: z.enum(["TOTAL", "EACH"]),
+    installment_count: z.number().int().min(2, "Mínimo de 2 cobranças.").max(360, "Máximo de 360 cobranças.").nullable(),
+    periodicity: z.enum(["DAILY", "WEEKLY", "BIWEEKLY", "MONTHLY", "BIMONTHLY", "QUARTERLY", "SEMIANNUAL", "ANNUAL", "CUSTOM"]),
+    interval_days: z.number().int().min(1, "Mínimo de 1 dia.").max(3650, "Máximo de 3650 dias.").nullable(),
+    first_due_date: isoDate,
+    scope: z.enum(["BUSINESS", "PERSONAL"]),
+    category_id: z.string().min(1, "Escolha uma categoria."),
+  })
+  .superRefine((v, ctx) => {
+    if (v.kind === "INSTALLMENT" && v.installment_count === null)
+      ctx.addIssue({ code: "custom", path: ["installment_count"], message: "Informe o número de cobranças." });
+    if (v.periodicity === "CUSTOM" && v.interval_days === null)
+      ctx.addIssue({ code: "custom", path: ["interval_days"], message: "Informe a cada quantos dias." });
+    if (v.kind === "INSTALLMENT" && v.amount_mode === "TOTAL" && v.installment_count && v.amount < v.installment_count)
+      ctx.addIssue({ code: "custom", path: ["amount"], message: "Valor menor que o número de cobranças." });
+  });
 
 export const openingSchema = z.object({
   display_name: z.string().trim().max(60),

@@ -51,15 +51,35 @@ export interface Transaction {
   cancelled_at: string | null;
 }
 
+/** Frequência das cobranças de um grupo (parcelas ou repetição). CUSTOM usa `interval_days`. */
+export type Periodicity = "DAILY" | "WEEKLY" | "BIWEEKLY" | "MONTHLY" | "BIMONTHLY" | "QUARTERLY" | "SEMIANNUAL" | "ANNUAL" | "CUSTOM";
+
+/**
+ * Tipo de grupo no crédito:
+ *  - INSTALLMENT: N cobranças (parcelar ou repetir), com periodicidade.
+ *  - FIXED: cobrança fixa mensal sem fim; o app gera as próximas enquanto `active`.
+ */
+export type GroupKind = "INSTALLMENT" | "FIXED";
+
+/** Grupo de cobranças no cartão de crédito. Cada cobrança é uma Transaction separada. */
 export interface InstallmentGroup {
   id: string;
+  kind: GroupKind;
+  type: TxType;
   description: string;
-  total_amount: number; // centavos
-  installment_count: number;
+  /** INSTALLMENT: soma das cobranças. FIXED: valor de cada mês. Em centavos. */
+  total_amount: number;
+  /** null em FIXED (sem fim). */
+  installment_count: number | null;
+  periodicity: Periodicity;
+  /** Só em CUSTOM: intervalo em dias. */
+  interval_days: number | null;
   payment_method: PaymentMethod;
   first_due_date: ISODate;
   scope: Scope;
   category_id: string | null;
+  /** FIXED encerrada = false (não gera novas cobranças). */
+  active: boolean;
 }
 
 export interface Reminder {
@@ -84,6 +104,18 @@ export const METHOD_LABEL: Record<PaymentMethod, string> = {
   UNSPECIFIED: "A definir",
 };
 
+export const PERIODICITY_LABEL: Record<Periodicity, string> = {
+  DAILY: "Diário",
+  WEEKLY: "Semanal",
+  BIWEEKLY: "Quinzenal",
+  MONTHLY: "Mensal",
+  BIMONTHLY: "Bimestral",
+  QUARTERLY: "Trimestral",
+  SEMIANNUAL: "Semestral",
+  ANNUAL: "Anual",
+  CUSTOM: "Personalizado",
+};
+
 export const STATUS_LABEL: Record<TxStatus, string> = {
   PENDING: "Pendente",
   SETTLED: "Liquidado",
@@ -96,12 +128,19 @@ export type NewTransaction = Omit<
   "id" | "created_at" | "cancelled_at" | "installment_group_id" | "installment_number" | "installment_count"
 >;
 
-/** Dados para criar uma compra parcelada no cartão. */
-export interface NewInstallmentPurchase {
+/** Dados para criar um grupo de cobranças no crédito (parcelado/repetido ou fixo mensal). */
+export interface NewTransactionGroup {
   id: string; // gerado no cliente: torna a criação idempotente
+  kind: GroupKind;
+  type: TxType;
   description: string;
-  total_amount: number;
-  installment_count: number;
+  /** Valor digitado, em centavos. Ver `amount_mode`. */
+  amount: number;
+  /** INSTALLMENT: "TOTAL" divide o valor entre as cobranças; "EACH" repete o valor em cada uma. FIXED: sempre "EACH". */
+  amount_mode: "TOTAL" | "EACH";
+  installment_count: number | null;
+  periodicity: Periodicity;
+  interval_days: number | null;
   first_due_date: ISODate;
   scope: Scope;
   category_id: string | null;
