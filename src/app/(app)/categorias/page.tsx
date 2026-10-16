@@ -6,16 +6,20 @@ import { useReady } from "@/providers/DataProvider";
 import { useToast } from "@/providers/ToastProvider";
 import { Empty, Field, PageHeader, Screen, SectionTitle, Seg, Sheet } from "@/components/ui";
 import { categorySchema, fieldErrors } from "@/lib/domain/schemas";
-import { SCOPE_LABEL, type Category, type Scope, type TxType } from "@/lib/domain/types";
+import type { Category, Scope, TxType } from "@/lib/domain/types";
 
 interface Draft {
   id?: string;
   name: string;
   transaction_type: TxType;
+  /** Mantido no banco por compatibilidade; a interface não divide mais por contexto. */
   default_scope: Scope;
 }
 
-/** Categorias: criar, editar e arquivar (arquivadas ficam no histórico, mas não em novos lançamentos). */
+/**
+ * Categorias: lista única por tipo (Saídas / Entradas), sem divisão profissional/pessoal.
+ * Criar, editar e arquivar (arquivadas ficam no histórico, mas não em novos lançamentos).
+ */
 export default function CategoriasPage() {
   const { categories, transactions, createCategory, updateCategory } = useReady();
   const toast = useToast();
@@ -79,9 +83,7 @@ export default function CategoriasPage() {
       >
         <span className="flex min-w-0 flex-col">
           <span className={`row-name ${c.is_archived ? "text-ink-2" : ""}`}>{c.name}</span>
-          <span className="row-sub">
-            {SCOPE_LABEL[c.default_scope]} · {usage.get(c.id) ?? 0} lançamentos
-          </span>
+          <span className="row-sub">{usage.get(c.id) ?? 0} lançamentos</span>
         </span>
         <Pencil size={18} className="flex-none text-ink-2" aria-hidden />
       </button>
@@ -91,7 +93,7 @@ export default function CategoriasPage() {
   const editingCat = draft?.id ? categories.find((c) => c.id === draft.id) : undefined;
 
   return (
-    <Screen size="wide">
+    <Screen>
       <PageHeader
         title="Categorias"
         back="/mais"
@@ -102,7 +104,7 @@ export default function CategoriasPage() {
             aria-label="Nova categoria"
             onClick={() => {
               setErrors({});
-              setDraft({ name: "", transaction_type: type, default_scope: "BUSINESS" });
+              setDraft({ name: "", transaction_type: type, default_scope: "PERSONAL" });
             }}
           >
             <Plus size={24} />
@@ -120,17 +122,10 @@ export default function CategoriasPage() {
         ]}
       />
       </div>
-      <div className="grid items-start gap-5 lg:grid-cols-2 lg:gap-6">
-      {(["BUSINESS", "PERSONAL"] as Scope[]).map((s) => {
-        const items = active.filter((c) => c.default_scope === s);
-        return (
-          <section key={s} className="flex flex-col gap-2.5">
-            <SectionTitle right={`${items.length}`}>{s === "BUSINESS" ? "Profissionais" : "Pessoais"}</SectionTitle>
-            {items.length ? <ul className="list panel">{items.map(row)}</ul> : <Empty>Nenhuma categoria.</Empty>}
-          </section>
-        );
-      })}
-      </div>
+      <section className="flex flex-col gap-2.5">
+        <SectionTitle right={`${active.length}`}>{type === "EXPENSE" ? "Categorias de saída" : "Categorias de entrada"}</SectionTitle>
+        {active.length ? <ul className="list panel">{active.map(row)}</ul> : <Empty>Nenhuma categoria.</Empty>}
+      </section>
       {archived.length > 0 && (
         <section className="flex flex-col gap-2.5">
           <SectionTitle right={`${archived.length}`}>Arquivadas</SectionTitle>
@@ -138,7 +133,7 @@ export default function CategoriasPage() {
         </section>
       )}
 
-      <Sheet open={!!draft} onClose={() => setDraft(null)} title={draft?.id ? "Editar categoria" : "Nova categoria"}>
+      <Sheet open={!!draft} onClose={() => setDraft(null)} title={draft?.id ? "Editar categoria" : "Nova categoria"} closeOnBack>
         {draft && (
           <>
             <Field label="Nome" error={errors.name}>
@@ -169,19 +164,6 @@ export default function CategoriasPage() {
                 />
               </div>
             )}
-            <div>
-              <span className="flabel">Contexto padrão</span>
-              <Seg
-                label="Contexto padrão"
-                small
-                value={draft.default_scope}
-                onChange={(v) => setDraft({ ...draft, default_scope: v })}
-                options={[
-                  ["BUSINESS", "Profissional"],
-                  ["PERSONAL", "Pessoal"],
-                ]}
-              />
-            </div>
             <button type="button" className="cta" disabled={busy} onClick={save}>
               Salvar
             </button>
