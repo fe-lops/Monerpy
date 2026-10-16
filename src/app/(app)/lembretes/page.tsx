@@ -3,15 +3,15 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Check, Eye } from "lucide-react";
-import { REMINDER_LEAD_DAYS, useReminders, type ReminderItem } from "@/components/hooks";
-import { useReady } from "@/components/providers/DataProvider";
-import { useToast } from "@/components/providers/ToastProvider";
+import { REMINDER_LEAD_DAYS, useReminders, type ReminderItem } from "@/hooks";
+import { useReady } from "@/providers/DataProvider";
+import { useToast } from "@/providers/ToastProvider";
 import { useSettleFlow } from "@/components/transactions";
 import { Empty, PageHeader, Screen, SectionTitle, Seg } from "@/components/ui";
-import { addDays } from "@/lib/dates";
-import { dueLabel, isOverdue, pendingDate } from "@/lib/finance";
-import { brl } from "@/lib/money";
-import type { ReminderStatus } from "@/lib/types";
+import { addDays } from "@/lib/domain/dates";
+import { dueLabel, isOverdue, pendingDate } from "@/lib/domain/finance";
+import { brl } from "@/lib/domain/money";
+import type { ReminderStatus } from "@/lib/domain/types";
 
 /** Lembretes internos (PRD regra 19): atrasadas e vencendo em até 3 dias; marcar como visto/concluído. */
 export default function LembretesPage() {

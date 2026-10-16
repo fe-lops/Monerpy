@@ -2,11 +2,11 @@
 
 import { useMemo, useState } from "react";
 import { Pencil, Plus } from "lucide-react";
-import { useReady } from "@/components/providers/DataProvider";
-import { useToast } from "@/components/providers/ToastProvider";
+import { useReady } from "@/providers/DataProvider";
+import { useToast } from "@/providers/ToastProvider";
 import { Empty, Field, PageHeader, Screen, SectionTitle, Seg, Sheet } from "@/components/ui";
-import { categorySchema, fieldErrors } from "@/lib/schemas";
-import { SCOPE_LABEL, type Category, type Scope, type TxType } from "@/lib/types";
+import { categorySchema, fieldErrors } from "@/lib/domain/schemas";
+import { SCOPE_LABEL, type Category, type Scope, type TxType } from "@/lib/domain/types";
 
 interface Draft {
   id?: string;

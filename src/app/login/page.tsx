@@ -5,11 +5,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AuthCard } from "@/components/AuthCard";
-import { useData } from "@/components/providers/DataProvider";
+import { AuthCard } from "@/components/layout";
+import { useData } from "@/providers/DataProvider";
 import { Field, Spinner } from "@/components/ui";
 import { supabaseEnvProblems } from "@/lib/env";
-import { loginSchema, type LoginInput } from "@/lib/schemas";
+import { loginSchema, type LoginInput } from "@/lib/domain/schemas";
 
 function LoginForm() {
   const { repo, status, signIn, error: loadError, reload, signOut } = useData();

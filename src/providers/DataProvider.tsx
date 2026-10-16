@@ -3,8 +3,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { getRepo, newId, type Repo, type SessionInfo, type Snapshot } from "@/lib/data";
 import { LocalRepo } from "@/lib/data/local";
-import { todayISO } from "@/lib/dates";
-import { availableBalance } from "@/lib/finance";
+import { todayISO } from "@/lib/domain/dates";
+import { availableBalance } from "@/lib/domain/finance";
 import type {
   Category,
   ISODate,
@@ -15,7 +15,7 @@ import type {
   ReminderStatus,
   ScopeFilter,
   Transaction,
-} from "@/lib/types";
+} from "@/lib/domain/types";
 
 type Status = "loading" | "anon" | "ready" | "error";
 

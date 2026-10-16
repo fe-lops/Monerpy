@@ -6,7 +6,7 @@ import type {
   Reminder,
   ReminderStatus,
   Transaction,
-} from "../types";
+} from "../domain/types";
 
 export interface Snapshot {
   profile: Profile;

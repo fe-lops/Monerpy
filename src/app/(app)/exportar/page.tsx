@@ -3,12 +3,12 @@
 import { useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 import { Download } from "lucide-react";
-import { useReady } from "@/components/providers/DataProvider";
-import { useToast } from "@/components/providers/ToastProvider";
+import { useReady } from "@/providers/DataProvider";
+import { useToast } from "@/providers/ToastProvider";
 import { Field, PageHeader, Screen, ScopeSeg, Seg } from "@/components/ui";
-import { startOfMonth } from "@/lib/dates";
-import { applyFilter, EMPTY_FILTER, toCSV, type HistoryFilter } from "@/lib/finance";
-import { brl } from "@/lib/money";
+import { startOfMonth } from "@/lib/domain/dates";
+import { applyFilter, EMPTY_FILTER, toCSV, type HistoryFilter } from "@/lib/domain/finance";
+import { brl } from "@/lib/domain/money";
 
 /** Exportação CSV respeitando os filtros (critério de aceite §11). */
 function ExportInner() {

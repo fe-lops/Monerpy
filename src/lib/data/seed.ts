@@ -1,5 +1,5 @@
-import { addDays } from "../dates";
-import type { Category, NewInstallmentPurchase, Scope, Transaction, TxType } from "../types";
+import { addDays } from "../domain/dates";
+import type { Category, NewInstallmentPurchase, Scope, Transaction, TxType } from "../domain/types";
 
 /** Categorias iniciais (PRD §7). Editáveis; o mesmo conjunto é criado pelo SQL no Supabase. */
 export const DEFAULT_CATEGORIES: { name: string; transaction_type: TxType; default_scope: Scope }[] = [

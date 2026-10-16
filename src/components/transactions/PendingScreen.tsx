@@ -1,11 +1,12 @@
 "use client";
 
 import { useMemo } from "react";
-import { useReady } from "@/components/providers/DataProvider";
-import { PendingRow, useSettleFlow } from "@/components/transactions";
+import { useReady } from "@/providers/DataProvider";
+import { PendingRow } from "./PendingRow";
+import { useSettleFlow } from "./useSettleFlow";
 import { ChipLink, Empty, PageHeader, Screen, ScopeSeg, SectionTitle } from "@/components/ui";
-import { BUCKET_LABEL, bucketPending, inScope, type BucketKey } from "@/lib/finance";
-import { brl } from "@/lib/money";
+import { BUCKET_LABEL, bucketPending, inScope, type BucketKey } from "@/lib/domain/finance";
+import { brl } from "@/lib/domain/money";
 
 type Kind = "all" | "pagar" | "receber";
 

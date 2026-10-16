@@ -2,9 +2,9 @@
 // (supabase/migrations), não deste código — o navegador só tem a chave anon.
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { todayISO } from "../dates";
-import { centsToNumeric, numericToCents } from "../money";
-import type { Category, Profile, Reminder, Transaction } from "../types";
+import { todayISO } from "../domain/dates";
+import { centsToNumeric, numericToCents } from "../domain/money";
+import type { Category, Profile, Reminder, Transaction } from "../domain/types";
 import type { Repo, SessionInfo, Snapshot } from "./repo";
 import { DEFAULT_CATEGORIES } from "./seed";
 

@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AuthCard } from "@/components/AuthCard";
-import { useData } from "@/components/providers/DataProvider";
-import { useToast } from "@/components/providers/ToastProvider";
+import { AuthCard } from "@/components/layout";
+import { useData } from "@/providers/DataProvider";
+import { useToast } from "@/providers/ToastProvider";
 import { Field, Spinner } from "@/components/ui";
-import { newPasswordSchema, type NewPasswordInput } from "@/lib/schemas";
+import { newPasswordSchema, type NewPasswordInput } from "@/lib/domain/schemas";
 
 /** Erro que o Supabase devolve na URL quando o link é inválido ou expirou (?error=… ou #error=…). */
 function linkErrorFromUrl(): string | null {
