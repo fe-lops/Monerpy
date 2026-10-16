@@ -1,14 +1,16 @@
 {
   "name": "monerpy",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint src",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check": "npm run typecheck && npm run lint && npm test",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
@@ -32,5 +34,9 @@
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^5.0.5"
+  },
+  "description": "Controle de caixa pessoal e profissional para microempreendedores (mobile-first).",
+  "engines": {
+    "node": ">=20"
   }
 }
