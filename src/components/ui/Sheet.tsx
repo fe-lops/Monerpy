@@ -3,8 +3,21 @@
 import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 
+interface SheetProps {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
+  /**
+   * O botão/gesto "voltar" do celular fecha a folha em vez de sair da página.
+   * Use só em folhas que fecham sem navegar em seguida (a entrada extra no histórico
+   * é removida ao fechar; uma navegação logo depois disputaria com essa remoção).
+   */
+  closeOnBack?: boolean;
+}
+
 /** Folha inferior modal (padrão do Design System para formulários rápidos). */
-export function Sheet({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode }) {
+export function Sheet({ open, onClose, title, children, closeOnBack = false }: SheetProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   // Guarda o onClose mais recente sem reexecutar o efeito abaixo. As telas passam
@@ -29,6 +42,21 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
       document.body.style.overflow = prev;
     };
   }, [open]);
+
+  // Botão "voltar": empilha uma entrada no histórico ao abrir; o "voltar" a consome e fecha a folha.
+  // Se a folha fechar de outro jeito (X, Esc, fundo, ação), remove a entrada que empilhou.
+  useEffect(() => {
+    if (!open || !closeOnBack) return;
+    const marker = Math.random().toString(36).slice(2);
+    window.history.pushState({ ...window.history.state, __monerpySheet: marker }, "");
+    const onPop = () => onCloseRef.current();
+    window.addEventListener("popstate", onPop);
+    return () => {
+      window.removeEventListener("popstate", onPop);
+      if (window.history.state?.__monerpySheet === marker) window.history.back();
+    };
+  }, [open, closeOnBack]);
+
   if (!open) return null;
   return (
     // Celular: folha que sobe da base. Computador: modal centralizado.

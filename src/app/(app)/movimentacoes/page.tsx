@@ -112,7 +112,7 @@ export default function MovimentacoesPage() {
         <Empty>{transactions.length ? "Nenhuma movimentação com estes filtros." : "Nenhuma movimentação ainda. Toque em “Lançar” para começar."}</Empty>
       )}
 
-      <Sheet open={open} onClose={() => setOpen(false)} title="Filtros">
+      <Sheet open={open} onClose={() => setOpen(false)} title="Filtros" closeOnBack>
         <div className="grid grid-cols-2 gap-3">
           <Field label="De">{(id) => <input id={id} type="date" className="field" value={f.from} onChange={(e) => set({ from: e.target.value })} />}</Field>
           <Field label="Até">{(id) => <input id={id} type="date" className="field" value={f.to} onChange={(e) => set({ to: e.target.value })} />}</Field>

@@ -173,6 +173,7 @@ export default function RegistrosPage() {
       <Sheet
         open={!!decision}
         onClose={() => setDecision(null)}
+        closeOnBack
         title={decision?.action === "reject" ? "Recusar registro?" : resend ? "Reenviar link?" : fromRejected ? "Aprovar cadastro recusado?" : "Aprovar registro?"}
       >
         {decision && (

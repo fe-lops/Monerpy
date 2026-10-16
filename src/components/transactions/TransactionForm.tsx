@@ -3,16 +3,18 @@
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { CreditCard } from "lucide-react";
-import { useReady } from "@/providers/DataProvider";
-import { useToast } from "@/providers/ToastProvider";
 import { Field, MoneyInput, Seg, Sheet } from "@/components/ui";
-import { TxTypeToggle } from "./TxTypeToggle";
 import { newId } from "@/lib/data";
 import { addMonths, dmy } from "@/lib/domain/dates";
-import { pendingDate, splitInstallments } from "@/lib/domain/finance";
+import { pendingDate } from "@/lib/domain/finance";
 import { brl } from "@/lib/domain/money";
-import { fieldErrors, installmentSchema, transactionSchema, type TransactionInput } from "@/lib/domain/schemas";
-import type { PaymentMethod, Scope, Transaction, TxType } from "@/lib/domain/types";
+import { FIXED_HORIZON_MONTHS, groupAmounts, MAX_INSTALLMENTS, occurrenceDate, periodicityText } from "@/lib/domain/recurrence";
+import { fieldErrors, groupSchema, transactionSchema, type TransactionInput } from "@/lib/domain/schemas";
+import { PERIODICITY_LABEL, type PaymentMethod, type Periodicity, type Scope, type Transaction, type TxType } from "@/lib/domain/types";
+import { useReady } from "@/providers/DataProvider";
+import { useToast } from "@/providers/ToastProvider";
+import { CREDIT_MODE_LABEL, CreditModeSheet, type CreditMode } from "./CreditModeSheet";
+import { TxTypeToggle } from "./TxTypeToggle";
 
 const METHODS_ALL: [PaymentMethod, string][] = [
   ["UNSPECIFIED", "A definir"],
@@ -21,6 +23,16 @@ const METHODS_ALL: [PaymentMethod, string][] = [
   ["CREDIT_CARD", "Crédito"],
 ];
 const METHODS_KNOWN = METHODS_ALL.slice(1) as [PaymentMethod, string][];
+
+const SCOPES: [Scope, string][] = [
+  ["BUSINESS", "💼 Profissional"],
+  ["PERSONAL", "👤 Pessoal"],
+];
+
+const PERIODICITIES = Object.keys(PERIODICITY_LABEL) as Periodicity[];
+
+/** Máximo de linhas na prévia das cobranças. */
+const PREVIEW_LIMIT = 6;
 
 interface Props {
   initialType?: TxType;
@@ -34,62 +46,119 @@ export function TransactionForm({ initialType = "EXPENSE", editing }: Props) {
   const router = useRouter();
   const toast = useToast();
 
-  const [formId] = useState(() => newId());
+  // ---- estado do lançamento ----
+  const [formId] = useState(() => newId()); // id fixo do formulário: reenviar não duplica
   const [type, setType] = useState<TxType>(editing?.type ?? initialType);
   const [amount, setAmount] = useState(editing?.amount ?? 0);
   const [description, setDescription] = useState(editing?.description ?? "");
   const [scope, setScope] = useState<Scope>(editing?.scope ?? (globalScope === "PERSONAL" ? "PERSONAL" : "BUSINESS"));
   const [categoryId, setCategoryId] = useState(editing?.category_id ?? "");
-  const [status, setStatus] = useState<"PENDING" | "SETTLED">(editing?.status === "SETTLED" ? "SETTLED" : editing ? "PENDING" : initialType === "INCOME" ? "PENDING" : "SETTLED");
+  const initialStatus = editing?.status === "SETTLED" ? "SETTLED" : editing ? "PENDING" : initialType === "INCOME" ? "PENDING" : "SETTLED";
+  const [status, setStatus] = useState<"PENDING" | "SETTLED">(initialStatus);
   const [refDate, setRefDate] = useState(editing ? (pendingDate(editing) ?? "") : initialType === "INCOME" ? "" : today);
   const [settledAt, setSettledAt] = useState(editing?.settled_at ?? today);
-  const [method, setMethod] = useState<PaymentMethod>(editing?.payment_method ?? "UNSPECIFIED");
+  const [method, setMethod] = useState<PaymentMethod>(editing?.payment_method ?? (initialStatus === "SETTLED" ? "PIX" : "UNSPECIFIED"));
   const [txDate, setTxDate] = useState(editing?.transaction_date ?? today);
   const [notes, setNotes] = useState(editing?.notes ?? "");
-  const [installment, setInstallment] = useState(false);
-  const [count, setCount] = useState(2);
+
+  // ---- crédito: parcelar/repetir ou fixa mensal ----
+  const [creditOn, setCreditOn] = useState(false);
+  const [creditMode, setCreditMode] = useState<CreditMode | null>(null);
+  const [chooserOpen, setChooserOpen] = useState(false);
+  const [count, setCount] = useState("2");
+  const [periodicity, setPeriodicity] = useState<Periodicity>("MONTHLY");
+  const [customDays, setCustomDays] = useState("30");
+  const [amountMode, setAmountMode] = useState<"TOTAL" | "EACH">("TOTAL");
   const [firstDue, setFirstDue] = useState(addMonths(today, 1));
+  const [fixedStart, setFixedStart] = useState(today);
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const isParcel = !!editing?.installment_group_id;
   const income = type === "INCOME";
+  /** Parcelado/repetido ou fixa mensal: gera várias cobranças em vez de um lançamento. */
+  const groupMode: "INSTALLMENT" | "FIXED" | null = creditOn && (creditMode === "INSTALLMENT" || creditMode === "FIXED") ? creditMode : null;
+  const countNum = Number(count) || 0;
+  const daysNum = periodicity === "CUSTOM" ? Number(customDays) || 0 : null;
 
-  // Categorias ativas do tipo, com as do contexto escolhido primeiro (regra: arquivadas não aparecem).
-  const options = useMemo(() => {
-    const list = categories.filter((c) => c.transaction_type === type && (!c.is_archived || c.id === editing?.category_id));
-    const same = list.filter((c) => c.default_scope === scope).sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
-    const other = list.filter((c) => c.default_scope !== scope).sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
-    return { same, other };
-  }, [categories, type, scope, editing?.category_id]);
+  // Categorias ativas do tipo (Entrada/Saída), em ordem alfabética. Arquivadas não aparecem.
+  const options = useMemo(
+    () =>
+      categories
+        .filter((c) => c.transaction_type === type && (!c.is_archived || c.id === editing?.category_id))
+        .sort((a, b) => a.name.localeCompare(b.name, "pt-BR")),
+    [categories, type, editing?.category_id],
+  );
+
+  function resetCredit() {
+    setCreditOn(false);
+    setCreditMode(null);
+  }
 
   function changeType(t: TxType) {
     setType(t);
     setCategoryId("");
-    setInstallment(false);
+    resetCredit();
     setStatus(t === "INCOME" ? "PENDING" : "SETTLED");
     setRefDate(t === "INCOME" ? "" : today);
+    if (t === "EXPENSE" && method === "UNSPECIFIED") setMethod("PIX");
     setErrors({});
   }
 
-  function changeScope(s: Scope) {
-    setScope(s);
-    const cat = categories.find((c) => c.id === categoryId);
-    if (cat && cat.default_scope !== s) setCategoryId("");
+  function changeMethod(m: PaymentMethod) {
+    setMethod(m);
+    if (m !== "CREDIT_CARD") resetCredit(); // "Parcelar no crédito" só existe com Crédito
   }
 
+  function toggleCredit() {
+    if (creditOn) return resetCredit();
+    setCreditOn(true);
+    setChooserOpen(true);
+  }
+
+  /** Fechou a janela sem escolher: cancela e desliga a opção (só se ainda não havia escolha). */
+  function closeChooser() {
+    setChooserOpen(false);
+    if (!creditMode) setCreditOn(false);
+  }
+
+  function chooseMode(m: CreditMode) {
+    setCreditMode(m);
+    setChooserOpen(false);
+    setErrors({});
+  }
+
+  // ---- prévia das cobranças do grupo ----
   const preview = useMemo(() => {
-    if (!installment || amount < count || count < 2) return [];
     try {
-      return splitInstallments(amount, count).map((v, i) => ({ n: i + 1, value: v, due: addMonths(firstDue, i) }));
+      if (groupMode === "INSTALLMENT") {
+        if (countNum < 2 || countNum > MAX_INSTALLMENTS || !amount || (periodicity === "CUSTOM" && !daysNum)) return null;
+        if (amountMode === "TOTAL" && amount < countNum) return null;
+        const values = groupAmounts(amount, countNum, amountMode);
+        return {
+          total: values.reduce((s, v) => s + v, 0),
+          count: countNum,
+          rows: values.slice(0, PREVIEW_LIMIT).map((v, i) => ({ n: i + 1, value: v, due: occurrenceDate(firstDue, i, periodicity, daysNum) })),
+        };
+      }
+      if (groupMode === "FIXED") {
+        if (!amount) return null;
+        return {
+          total: amount,
+          count: null,
+          rows: Array.from({ length: FIXED_HORIZON_MONTHS + 1 }, (_, i) => ({ n: i + 1, value: amount, due: occurrenceDate(fixedStart, i, "MONTHLY") })),
+        };
+      }
     } catch {
-      return [];
+      return null;
     }
-  }, [installment, amount, count, firstDue]);
+    return null;
+  }, [groupMode, countNum, amount, periodicity, daysNum, amountMode, firstDue, fixedStart]);
 
   function validateSimple(): TransactionInput | null {
-    const input = {
+    const parsed = transactionSchema.safeParse({
       type,
       scope,
       status,
@@ -101,8 +170,7 @@ export function TransactionForm({ initialType = "EXPENSE", editing }: Props) {
       settled_at: status === "SETTLED" ? settledAt : "",
       payment_method: method,
       notes,
-    };
-    const parsed = transactionSchema.safeParse(input);
+    });
     if (!parsed.success) {
       setErrors(fieldErrors(parsed.error));
       return null;
@@ -115,16 +183,30 @@ export function TransactionForm({ initialType = "EXPENSE", editing }: Props) {
     return parsed.data;
   }
 
+  function groupInput() {
+    return {
+      kind: groupMode!,
+      description,
+      amount,
+      amount_mode: groupMode === "FIXED" ? ("EACH" as const) : amountMode,
+      installment_count: groupMode === "FIXED" ? null : countNum || null,
+      periodicity: groupMode === "FIXED" ? ("MONTHLY" as const) : periodicity,
+      interval_days: groupMode === "FIXED" ? null : daysNum,
+      first_due_date: groupMode === "FIXED" ? fixedStart : firstDue,
+      scope,
+      category_id: categoryId,
+    };
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (busy) return;
 
-    if (installment) {
-      const parsed = installmentSchema.safeParse({ description, total_amount: amount, installment_count: count, first_due_date: firstDue, scope, category_id: categoryId });
+    if (groupMode) {
+      const parsed = groupSchema.safeParse(groupInput());
       if (!parsed.success) return setErrors(fieldErrors(parsed.error));
-      if (amount < count) return setErrors({ total_amount: "Valor menor que o número de parcelas." });
       setErrors({});
-      setConfirming(true); // PRD: confirmação antes de salvar
+      setConfirming(true); // PRD: confirmação antes de criar várias cobranças
       return;
     }
 
@@ -163,21 +245,12 @@ export function TransactionForm({ initialType = "EXPENSE", editing }: Props) {
     }
   }
 
-  async function confirmInstallments() {
-    if (busy) return;
+  async function confirmGroup() {
+    if (busy || !groupMode) return;
     setBusy(true);
     try {
-      await data.createInstallments({
-        id: formId,
-        description: description.trim(),
-        total_amount: amount,
-        installment_count: count,
-        first_due_date: firstDue,
-        scope,
-        category_id: categoryId,
-        transaction_date: txDate,
-      });
-      toast(`Compra parcelada em ${count}x criada.`);
+      const list = await data.createGroup({ id: formId, type, transaction_date: txDate, ...groupInput() });
+      toast(groupMode === "FIXED" ? "Cobrança fixa mensal criada." : `${list.length} cobranças criadas no crédito.`);
       router.replace(`/movimentacoes/parcelamento/${formId}`);
     } catch (err) {
       setConfirming(false);
@@ -186,25 +259,29 @@ export function TransactionForm({ initialType = "EXPENSE", editing }: Props) {
     }
   }
 
+  const amountLabel = groupMode === "FIXED" ? "Valor mensal" : groupMode === "INSTALLMENT" ? (amountMode === "TOTAL" ? "Valor total" : "Valor de cada cobrança") : "Valor";
+  const payLabel = income ? "Forma de recebimento" : "Forma de pagamento";
+
   return (
     // data-type pinta o valor e o botão de confirmar com a cor do tipo (ver .tx-form em globals.css).
     <form className="tx-form flex flex-col gap-5" data-type={income ? "income" : "expense"} onSubmit={submit} noValidate>
       {!editing && <TxTypeToggle value={type} onChange={changeType} />}
 
-      <Field label={installment ? "Valor total da compra" : "Valor"} error={errors.amount || errors.total_amount}>
-        {(id) => <MoneyInput id={id} big cents={amount} onChange={setAmount} invalid={!!(errors.amount || errors.total_amount)} autoFocus={!editing} />}
+      {/* Sem autoFocus: no celular o teclado só abre quando a pessoa toca no campo. */}
+      <Field label={amountLabel} error={errors.amount}>
+        {(id) => <MoneyInput id={id} big cents={amount} onChange={setAmount} invalid={!!errors.amount} />}
       </Field>
-      {isParcel && <p className="cap -mt-3">O valor de uma parcela não pode ser alterado aqui para manter a soma igual ao total da compra.</p>}
+      {isParcel && <p className="cap -mt-3">O valor de uma cobrança do grupo não pode ser alterado aqui, para manter a soma do grupo.</p>}
 
-      <Field label={installment ? "Descrição da compra" : "Descrição (opcional)"} error={errors.description}>
+      <Field label={groupMode ? "Descrição" : "Descrição (opcional)"} error={errors.description}>
         {(id) => (
           <input
             id={id}
             className="field"
-            maxLength={80}
+            maxLength={groupMode ? 60 : 80}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder={income ? "Ex.: Atendimento — Ana" : "Ex.: Reposição de produtos"}
+            placeholder={income ? "Ex.: Atendimento — Ana" : "Ex.: Supermercado do mês"}
             autoComplete="off"
           />
         )}
@@ -212,95 +289,143 @@ export function TransactionForm({ initialType = "EXPENSE", editing }: Props) {
 
       <div>
         <span className="flabel">Contexto</span>
-        <Seg
-          label="Contexto"
-          value={scope}
-          onChange={changeScope}
-          options={[
-            ["BUSINESS", "Profissional"],
-            ["PERSONAL", "Pessoal"],
-          ]}
-        />
+        <Seg label="Contexto" value={scope} onChange={setScope} options={SCOPES} />
       </div>
 
       <Field label="Categoria" error={errors.category_id}>
         {(id) => (
           <select id={id} className="field" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} aria-invalid={!!errors.category_id}>
             <option value="">Selecione a categoria</option>
-            <optgroup label={scope === "BUSINESS" ? "Profissionais" : "Pessoais"}>
-              {options.same.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </optgroup>
-            {options.other.length > 0 && (
-              <optgroup label={scope === "BUSINESS" ? "Pessoais" : "Profissionais"}>
-                {options.other.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </optgroup>
-            )}
+            {options.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
           </select>
         )}
       </Field>
 
-      {!income && !editing && (
-        <button
-          type="button"
-          role="switch"
-          aria-checked={installment}
-          onClick={() => setInstallment((v) => !v)}
-          className="panel flex items-center justify-between gap-3 p-4 text-left"
-        >
-          <span className="flex min-w-0 items-center gap-3">
-            <CreditCard size={22} className="flex-none text-ink-2" aria-hidden />
-            <span className="flex flex-col">
-              <span className="font-medium">Parcelar no cartão de crédito</span>
-              <span className="row-sub">Cria uma conta a pagar por parcela</span>
+      <div>
+        <span className="flabel">{payLabel}</span>
+        <Seg label={payLabel} small value={method} onChange={changeMethod} options={status === "SETTLED" && !groupMode ? METHODS_KNOWN : METHODS_ALL} />
+        {errors.payment_method && <p className="error mt-1.5">{errors.payment_method}</p>}
+      </div>
+
+      {/* "Parcelar no crédito": só com Crédito selecionado e em lançamento novo. */}
+      {method === "CREDIT_CARD" && !editing && (
+        <div className="panel flex flex-col">
+          <button type="button" role="switch" aria-checked={creditOn} onClick={toggleCredit} className="flex items-center justify-between gap-3 p-4 text-left">
+            <span className="flex min-w-0 items-center gap-3">
+              <CreditCard size={22} className="flex-none text-ink-2" aria-hidden />
+              <span className="flex flex-col">
+                <span className="font-medium">Parcelar no crédito</span>
+                <span className="row-sub">{creditOn && creditMode ? CREDIT_MODE_LABEL[creditMode] : "Parcelas, repetição ou cobrança fixa"}</span>
+              </span>
             </span>
-          </span>
-          <span className="switch" data-on={installment} aria-hidden />
-        </button>
+            <span className="switch" data-on={creditOn} aria-hidden />
+          </button>
+          {creditOn && creditMode && (
+            <button type="button" className="linkbtn self-start px-4 pb-3 pt-0" onClick={() => setChooserOpen(true)}>
+              Alterar tipo de cobrança
+            </button>
+          )}
+        </div>
       )}
 
-      {installment ? (
+      {groupMode === "INSTALLMENT" && (
         <>
+          <div>
+            <span className="flabel">O valor digitado é</span>
+            <Seg
+              label="O valor digitado é"
+              small
+              value={amountMode}
+              onChange={setAmountMode}
+              options={[
+                ["TOTAL", "O total (dividir)"],
+                ["EACH", "De cada cobrança"],
+              ]}
+            />
+          </div>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Parcelas" error={errors.installment_count}>
+            <Field label={amountMode === "TOTAL" ? "Parcelas" : "Repetições"} error={errors.installment_count}>
               {(id) => (
-                <select id={id} className="field" value={count} onChange={(e) => setCount(Number(e.target.value))}>
-                  {Array.from({ length: 23 }, (_, i) => i + 2).map((n) => (
-                    <option key={n} value={n}>
-                      {n}x
-                    </option>
-                  ))}
-                </select>
+                <input
+                  id={id}
+                  className="field num"
+                  type="number"
+                  inputMode="numeric"
+                  min={2}
+                  max={MAX_INSTALLMENTS}
+                  value={count}
+                  onChange={(e) => setCount(e.target.value.replace(/\D/g, "").slice(0, 3))}
+                  aria-invalid={!!errors.installment_count}
+                />
               )}
             </Field>
-            <Field label="1ª parcela vence" error={errors.first_due_date}>
+            <Field label="1ª cobrança" error={errors.first_due_date}>
               {(id) => <input id={id} type="date" className="field" value={firstDue} onChange={(e) => setFirstDue(e.target.value)} />}
             </Field>
           </div>
-          {preview.length > 0 && (
-            <section className="panel p-4" aria-label="Prévia das parcelas">
-              <p className="cap mb-2">Intervalo mensal · ajuste de centavos na última parcela</p>
-              <ul className="flex flex-col gap-1.5 text-sm">
-                {preview.map((p) => (
-                  <li key={p.n} className="flex justify-between gap-3">
-                    <span className="text-ink-2">
-                      {p.n}/{count} · vence {dmy(p.due)}
-                    </span>
-                    <span className="num font-semibold">{brl(p.value)}</span>
-                  </li>
+          <Field label="Periodicidade">
+            {(id) => (
+              <select id={id} className="field" value={periodicity} onChange={(e) => setPeriodicity(e.target.value as Periodicity)}>
+                {PERIODICITIES.map((p) => (
+                  <option key={p} value={p}>
+                    {PERIODICITY_LABEL[p]}
+                  </option>
                 ))}
-              </ul>
-            </section>
+              </select>
+            )}
+          </Field>
+          {periodicity === "CUSTOM" && (
+            <Field label="Cobrar a cada quantos dias?" error={errors.interval_days} hint="Ex.: 10 = uma cobrança a cada 10 dias.">
+              {(id) => (
+                <input
+                  id={id}
+                  className="field num"
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={3650}
+                  value={customDays}
+                  onChange={(e) => setCustomDays(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                  aria-invalid={!!errors.interval_days}
+                />
+              )}
+            </Field>
           )}
         </>
-      ) : (
+      )}
+
+      {groupMode === "FIXED" && (
+        <Field label="Primeira cobrança" error={errors.first_due_date} hint={`Cobrada todo dia ${fixedStart.slice(8, 10)} no crédito, até você encerrar.`}>
+          {(id) => <input id={id} type="date" className="field" value={fixedStart} onChange={(e) => setFixedStart(e.target.value)} />}
+        </Field>
+      )}
+
+      {groupMode && preview && (
+        <section className="panel p-4" aria-label="Prévia das cobranças">
+          <p className="cap mb-2">
+            {groupMode === "FIXED"
+              ? `Próximas cobranças · as seguintes são criadas automaticamente`
+              : `${preview.count} cobranças · ${periodicityText(periodicity, daysNum)} · total ${brl(preview.total)}${amountMode === "TOTAL" ? " · centavos na última" : ""}`}
+          </p>
+          <ul className="flex flex-col gap-1.5 text-sm">
+            {preview.rows.map((p) => (
+              <li key={p.n} className="flex justify-between gap-3">
+                <span className="text-ink-2">
+                  {preview.count ? `${p.n}/${preview.count}` : `${p.n}ª`} · {dmy(p.due)}
+                </span>
+                <span className="num font-semibold">{brl(p.value)}</span>
+              </li>
+            ))}
+            {preview.count && preview.count > PREVIEW_LIMIT && <li className="cap">… e mais {preview.count - PREVIEW_LIMIT}</li>}
+          </ul>
+        </section>
+      )}
+
+      {!groupMode && (
         <>
           <div>
             <span className="flabel">Situação</span>
@@ -328,12 +453,6 @@ export function TransactionForm({ initialType = "EXPENSE", editing }: Props) {
               {(id) => <input id={id} type="date" className="field" value={settledAt} max={today} onChange={(e) => setSettledAt(e.target.value)} />}
             </Field>
           )}
-
-          <div>
-            <span className="flabel">{income ? "Forma de recebimento" : "Forma de pagamento"}</span>
-            <Seg label="Forma de pagamento" small value={method} onChange={setMethod} options={status === "SETTLED" ? METHODS_KNOWN : METHODS_ALL} />
-            {errors.payment_method && <p className="error mt-1.5">{errors.payment_method}</p>}
-          </div>
         </>
       )}
 
@@ -343,7 +462,7 @@ export function TransactionForm({ initialType = "EXPENSE", editing }: Props) {
           <Field label="Data de lançamento">
             {(id) => <input id={id} type="date" className="field" value={txDate} onChange={(e) => setTxDate(e.target.value)} />}
           </Field>
-          {!installment && (
+          {!groupMode && (
             <Field label="Observações" error={errors.notes}>
               {(id) => <textarea id={id} className="field" maxLength={500} value={notes} onChange={(e) => setNotes(e.target.value)} />}
             </Field>
@@ -363,25 +482,37 @@ export function TransactionForm({ initialType = "EXPENSE", editing }: Props) {
       )}
 
       <button type="submit" className="cta cta-tx" disabled={busy}>
-        {editing ? "Salvar alterações" : installment ? "Revisar parcelas" : "Confirmar"}
+        {editing ? "Salvar alterações" : groupMode ? "Revisar cobranças" : "Confirmar"}
       </button>
 
-      <Sheet open={confirming} onClose={() => setConfirming(false)} title="Confirmar parcelamento">
-        <p className="text-ink-2">
-          {description} · {brl(amount)} em {count}x no cartão de crédito. Serão criadas {count} contas a pagar:
-        </p>
-        <ul className="panel flex flex-col gap-1.5 p-4 text-sm">
-          {preview.map((p) => (
-            <li key={p.n} className="flex justify-between gap-3">
-              <span className="text-ink-2">
-                {p.n}/{count} · {dmy(p.due)}
-              </span>
-              <span className="num font-semibold">{brl(p.value)}</span>
-            </li>
-          ))}
-        </ul>
-        <button type="button" className="cta" disabled={busy} onClick={confirmInstallments}>
-          Criar {count} parcelas
+      <CreditModeSheet open={chooserOpen} current={creditMode} onChoose={chooseMode} onClose={closeChooser} />
+
+      <Sheet open={confirming} onClose={() => setConfirming(false)} title={groupMode === "FIXED" ? "Confirmar cobrança fixa" : "Confirmar cobranças"}>
+        {groupMode === "FIXED" ? (
+          <p className="text-ink-2">
+            {description} · {brl(amount)} todo dia {fixedStart.slice(8, 10)} no crédito, a partir de {dmy(fixedStart)}. As próximas cobranças são criadas
+            automaticamente; você pode encerrar quando quiser.
+          </p>
+        ) : (
+          <p className="text-ink-2">
+            {description} · {preview?.count} cobranças {periodicityText(periodicity, daysNum)} no crédito, total de {brl(preview?.total ?? 0)}.
+          </p>
+        )}
+        {preview && (
+          <ul className="panel flex flex-col gap-1.5 p-4 text-sm">
+            {preview.rows.map((p) => (
+              <li key={p.n} className="flex justify-between gap-3">
+                <span className="text-ink-2">
+                  {preview.count ? `${p.n}/${preview.count}` : `${p.n}ª`} · {dmy(p.due)}
+                </span>
+                <span className="num font-semibold">{brl(p.value)}</span>
+              </li>
+            ))}
+            {preview.count && preview.count > PREVIEW_LIMIT && <li className="cap">… e mais {preview.count - PREVIEW_LIMIT}</li>}
+          </ul>
+        )}
+        <button type="button" className="cta" disabled={busy} onClick={confirmGroup}>
+          {groupMode === "FIXED" ? "Criar cobrança fixa" : `Criar ${preview?.count ?? ""} cobranças`}
         </button>
         <button type="button" className="btn-ghost" onClick={() => setConfirming(false)}>
           Voltar e editar

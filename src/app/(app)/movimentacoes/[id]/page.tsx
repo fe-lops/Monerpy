@@ -71,7 +71,8 @@ export default function MovimentacaoPage() {
     [income ? "Forma de recebimento" : "Forma de pagamento", METHOD_LABEL[tx.payment_method]],
     ["Lançado em", dmy(tx.transaction_date)],
   ];
-  if (tx.installment_number) rows.push(["Parcela", `${tx.installment_number} de ${tx.installment_count}`]);
+  if (tx.installment_number)
+    rows.push(tx.installment_count ? ["Parcela", `${tx.installment_number} de ${tx.installment_count}`] : ["Cobrança", `Fixa mensal (${tx.installment_number}ª)`]);
   if (tx.cancelled_at) rows.push(["Cancelado em", dmy(tx.cancelled_at.slice(0, 10))]);
 
   return (
@@ -104,7 +105,7 @@ export default function MovimentacaoPage() {
       {tx.installment_group_id && (
         <Link href={`/movimentacoes/parcelamento/${tx.installment_group_id}`} className="panel flex items-center gap-3 p-4">
           <CreditCard size={20} className="text-ink-2" aria-hidden />
-          <span className="font-medium">Ver todas as parcelas desta compra</span>
+          <span className="font-medium">Ver todas as cobranças deste grupo</span>
         </Link>
       )}
 
@@ -135,7 +136,7 @@ export default function MovimentacaoPage() {
         )}
       </div>
 
-      <Sheet open={askCancel} onClose={() => setAskCancel(false)} title="Cancelar lançamento?">
+      <Sheet open={askCancel} onClose={() => setAskCancel(false)} title="Cancelar lançamento?" closeOnBack>
         <p className="text-ink-2">
           O lançamento continua no histórico como cancelado e deixa de contar no saldo e nas pendências. Você pode restaurá-lo depois.
         </p>
