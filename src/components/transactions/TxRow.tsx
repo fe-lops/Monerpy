@@ -23,6 +23,7 @@ export function TxRow({ tx }: { tx: Transaction }) {
           <span className="row-sub truncate">
             {categoryName(tx.category_id)} · {dm(date)}
             {tx.scope === "PERSONAL" ? " · Pessoal" : ""}
+            {tx.installment_group_id && tx.installment_count === null ? " · Fixa mensal" : ""}
             {status && <span className={late ? "text-neg" : ""}> · {status}</span>}
           </span>
         </div>

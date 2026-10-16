@@ -8,7 +8,7 @@ import { Field, Seg, Sheet } from "@/components/ui";
 import { dmy } from "@/lib/domain/dates";
 import { pendingDate } from "@/lib/domain/finance";
 import { brl } from "@/lib/domain/money";
-import { METHOD_LABEL, SCOPE_LABEL, type PaymentMethod, type Transaction } from "@/lib/domain/types";
+import { SCOPE_LABEL, type PaymentMethod, type Transaction } from "@/lib/domain/types";
 
 const METHODS: [Exclude<PaymentMethod, "UNSPECIFIED">, string][] = [
   ["PIX", "Pix"],
@@ -56,7 +56,7 @@ export function useSettleFlow() {
 
   const income = tx?.type === "INCOME";
   const sheet = (
-    <Sheet open={!!tx} onClose={() => setTx(null)} title={income ? "Confirmar recebimento" : "Confirmar pagamento"}>
+    <Sheet open={!!tx} onClose={() => setTx(null)} closeOnBack title={income ? "Confirmar recebimento" : "Confirmar pagamento"}>
       {tx && (
         <>
           <div className="panel flex items-center justify-between gap-3 p-4">
@@ -77,7 +77,10 @@ export function useSettleFlow() {
             <Seg label="Forma de pagamento" value={method} options={METHODS} onChange={setMethod} />
             {tx.installment_group_id && (
               <p className="cap mt-2 flex items-center gap-1.5">
-                <CreditCard size={14} aria-hidden /> Parcela {tx.installment_number}/{tx.installment_count} no {METHOD_LABEL.CREDIT_CARD.toLowerCase()}. As demais continuam pendentes.
+                <CreditCard size={14} aria-hidden />
+                {tx.installment_count
+                  ? `Parcela ${tx.installment_number}/${tx.installment_count} no crédito. As demais continuam pendentes.`
+                  : "Cobrança fixa mensal no crédito. As próximas continuam pendentes."}
               </p>
             )}
           </div>

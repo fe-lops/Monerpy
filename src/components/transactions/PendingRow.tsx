@@ -23,6 +23,7 @@ export function PendingRow({ tx, onSettle }: { tx: Transaction; onSettle: (tx: T
           {categoryName(tx.category_id)} · {d ? `${income ? "Prev." : "Venc."} ${dm(d)}` : "Sem data"}
           {d && ` · ${dueLabel(tx, today).replace(/^Vence /, "").replace(/^Venceu /, "")}`}
           {tx.scope === "PERSONAL" ? " · Pessoal" : ""}
+          {tx.installment_group_id && tx.installment_count === null ? " · Fixa mensal" : ""}
         </span>
       </Link>
       <div className="flex flex-none items-center gap-3">
