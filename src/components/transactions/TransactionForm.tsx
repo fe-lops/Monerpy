@@ -6,6 +6,7 @@ import { CreditCard } from "lucide-react";
 import { useReady } from "@/providers/DataProvider";
 import { useToast } from "@/providers/ToastProvider";
 import { Field, MoneyInput, Seg, Sheet } from "@/components/ui";
+import { TxTypeToggle } from "./TxTypeToggle";
 import { newId } from "@/lib/data";
 import { addMonths, dmy } from "@/lib/domain/dates";
 import { pendingDate, splitInstallments } from "@/lib/domain/finance";
@@ -186,18 +187,9 @@ export function TransactionForm({ initialType = "EXPENSE", editing }: Props) {
   }
 
   return (
-    <form className="flex flex-col gap-5" onSubmit={submit} noValidate>
-      {!editing && (
-        <Seg
-          label="Tipo de lançamento"
-          value={type}
-          onChange={changeType}
-          options={[
-            ["EXPENSE", "Saída"],
-            ["INCOME", "Entrada"],
-          ]}
-        />
-      )}
+    // data-type pinta o valor e o botão de confirmar com a cor do tipo (ver .tx-form em globals.css).
+    <form className="tx-form flex flex-col gap-5" data-type={income ? "income" : "expense"} onSubmit={submit} noValidate>
+      {!editing && <TxTypeToggle value={type} onChange={changeType} />}
 
       <Field label={installment ? "Valor total da compra" : "Valor"} error={errors.amount || errors.total_amount}>
         {(id) => <MoneyInput id={id} big cents={amount} onChange={setAmount} invalid={!!(errors.amount || errors.total_amount)} autoFocus={!editing} />}
@@ -370,7 +362,7 @@ export function TransactionForm({ initialType = "EXPENSE", editing }: Props) {
         </p>
       )}
 
-      <button type="submit" className="cta" disabled={busy}>
+      <button type="submit" className="cta cta-tx" disabled={busy}>
         {editing ? "Salvar alterações" : installment ? "Revisar parcelas" : "Confirmar"}
       </button>
 

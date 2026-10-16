@@ -4,3 +4,4 @@ export { PendingRow } from "./PendingRow";
 export { useSettleFlow } from "./useSettleFlow";
 export { TransactionForm } from "./TransactionForm";
 export { PendingScreen } from "./PendingScreen";
+export { TxTypeToggle } from "./TxTypeToggle";

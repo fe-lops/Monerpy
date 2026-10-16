@@ -18,6 +18,9 @@
   --neg-ink: #f87171;
   --neg-chip: #dc2626;
   --warn-ink: #fbbf24;
+  /* Cores sólidas de Entrada (verde) e Saída (vermelho), com texto branco por cima. Iguais nos dois temas. */
+  --income-solid: #16a34a;
+  --expense-solid: #dc2626;
   --seg-on: #ffffff;
   --seg-on-text: #0f172a;
   --bd-pagar: #334155;
@@ -118,6 +121,95 @@ body {
   }
   .icon-btn:hover {
     background: var(--bg-card);
+  }
+
+  /* Seletor Entrada/Saída: uma pílula colorida (borda branca) desliza entre as opções. */
+  .type-toggle {
+    --ease-fluid: cubic-bezier(0.22, 1, 0.36, 1);
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 4px;
+    border-radius: 999px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+  }
+  .type-toggle__thumb {
+    position: absolute;
+    z-index: -1;
+    top: 4px;
+    bottom: 4px;
+    left: 4px;
+    width: calc(50% - 4px);
+    border-radius: 999px;
+    border: 2px solid #fff;
+    background: var(--expense-solid);
+    box-shadow: 0 6px 18px color-mix(in srgb, var(--expense-solid) 45%, transparent);
+    transition:
+      transform 0.45s var(--ease-fluid),
+      background-color 0.45s ease,
+      box-shadow 0.45s ease;
+  }
+  .type-toggle[data-type="income"] .type-toggle__thumb {
+    transform: translateX(100%);
+    background: var(--income-solid);
+    box-shadow: 0 6px 18px color-mix(in srgb, var(--income-solid) 45%, transparent);
+  }
+  .type-toggle > button {
+    height: 46px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-weight: 600;
+    color: var(--text-2);
+    transition: color 0.35s ease;
+  }
+  .type-toggle > button[aria-checked="true"] {
+    color: #fff;
+  }
+  .type-toggle > button svg {
+    transition:
+      transform 0.45s var(--ease-fluid),
+      color 0.35s ease;
+  }
+  .type-toggle > button[aria-checked="true"] svg {
+    transform: scale(1.12);
+  }
+  /* Na opção não selecionada, o ícone já mostra a cor dela como dica. */
+  .type-toggle > button[data-kind="expense"][aria-checked="false"] svg {
+    color: var(--neg-ink);
+  }
+  .type-toggle > button[data-kind="income"][aria-checked="false"] svg {
+    color: var(--pos-ink);
+  }
+
+  /* Formulário de lançamento acompanha a cor do tipo escolhido (valor e botão de confirmar). */
+  .tx-form {
+    --tx-solid: var(--expense-solid);
+    --tx-ink: var(--neg-ink);
+  }
+  .tx-form[data-type="income"] {
+    --tx-solid: var(--income-solid);
+    --tx-ink: var(--pos-ink);
+  }
+  .tx-form .valor {
+    color: var(--tx-ink);
+    transition:
+      color 0.45s ease,
+      border-color 0.45s ease;
+  }
+  .tx-form .valor:focus-visible {
+    border-bottom-color: var(--tx-solid);
+  }
+  .tx-form .cta-tx {
+    background: var(--tx-solid);
+    color: #fff;
+    transition:
+      background-color 0.45s ease,
+      filter 0.2s ease;
   }
 
   /* Seletor segmentado */
