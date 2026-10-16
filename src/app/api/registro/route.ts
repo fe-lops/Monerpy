@@ -9,9 +9,22 @@ import { ApiError, assertKeyAccepted, isMissingTable, supabaseAdmin } from "@/li
 /** Mensagem pública: detalhes de configuração aparecem só para administradores e nos logs. */
 const UNAVAILABLE = "Registro indisponível no momento por um problema de configuração. Tente mais tarde ou avise o administrador.";
 
+const APPROVED_MESSAGE = "Este e-mail já teve o acesso aprovado. Use “Entrar”; se ainda não criou a senha, use “Esqueci minha senha”.";
+
+function rejectedMessage(): string {
+  const contact = serverConfig.supportEmail ? `pelo e-mail ${serverConfig.supportEmail}` : "com o suporte do Monerpy";
+  return `Já existe uma solicitação de acesso para este e-mail, e ela não foi aprovada. Se acredita que houve um engano, entre em contato ${contact}.`;
+}
+
+/** 409 com `code` para a tela mostrar o aviso adequado. */
+function conflict(code: "REJECTED" | "APPROVED", error: string) {
+  return NextResponse.json({ error, code }, { status: 409 });
+}
+
 /**
  * POST /api/registro — visitante pede acesso informando o e-mail.
- * Resposta é sempre a mesma em caso de sucesso, para não revelar quais e-mails já existem.
+ * E-mail já recusado não pode pedir de novo (409 REJECTED); já aprovado é orientado a entrar (409 APPROVED).
+ * Pedido pendente repetido responde como sucesso, sem duplicar.
  */
 export async function POST(request: Request) {
   return handle(async () => {
@@ -22,7 +35,22 @@ export async function POST(request: Request) {
     const { email } = parsed.data;
     let error: { code?: string; message: string } | null;
     try {
-      ({ error } = await supabaseAdmin().from("registration_requests").insert({ email }));
+      const db = supabaseAdmin();
+
+      // Histórico deste e-mail: recusado não pode pedir de novo; aprovado deve entrar.
+      const { data: previous, error: lookupError } = await db
+        .from("registration_requests")
+        .select("status")
+        .eq("email", email)
+        .in("status", ["REJECTED", "APPROVED"])
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      assertKeyAccepted(lookupError);
+      if (previous?.status === "REJECTED") return conflict("REJECTED", rejectedMessage());
+      if (previous?.status === "APPROVED") return conflict("APPROVED", APPROVED_MESSAGE);
+
+      ({ error } = await db.from("registration_requests").insert({ email }));
       assertKeyAccepted(error);
     } catch (e) {
       console.error("[registro] configuração", e instanceof Error ? e.message : e);

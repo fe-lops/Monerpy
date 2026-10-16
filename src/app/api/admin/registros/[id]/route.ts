@@ -12,7 +12,8 @@ type Ctx = { params: Promise<{ id: string }> };
  * POST /api/admin/registros/:id  { action: "approve" | "reject", note? }
  *
  * Aprovar: cria a conta (convite) e envia o link para a pessoa criar a senha.
- *          Pode ser repetido num pedido já aprovado para reenviar um link novo.
+ *          Vale para pedido pendente, recusado (o administrador muda de ideia: vai para Aprovados)
+ *          ou já aprovado (reenvia um link novo).
  * Recusar: marca como recusado e envia o e-mail de recusa.
  */
 export async function POST(request: Request, { params }: Ctx) {
@@ -41,7 +42,6 @@ export async function POST(request: Request, { params }: Ctx) {
       return NextResponse.json({ ok: true, emailSent });
     }
 
-    if (req.status === "REJECTED") throw new ApiError(409, "Pedido recusado não pode ser aprovado. Peça para a pessoa solicitar novamente.");
     await sendApprovalLink(req.email, `${appUrl(request)}/definir-senha`);
     const { error: upErr } = await db.from("registration_requests").update({ status: "APPROVED", note: null, ...decided }).eq("id", id);
     if (upErr) throw new ApiError(500, "Conta criada, mas não foi possível atualizar o pedido.");
