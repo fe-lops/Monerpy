@@ -87,7 +87,7 @@ export function Sidebar() {
         <div className="grid size-10 flex-none place-items-center rounded-full bg-accent font-display text-sm font-extrabold text-on-accent">{initials}</div>
         <div className="flex min-w-0 flex-1 flex-col">
           <span className="truncate text-sm font-semibold">{profile.display_name || "Minha conta"}</span>
-          <span className="truncate text-xs text-ink-2">{repo.mode === "local" ? "Modo local" : session?.email}</span>
+          <span className="truncate text-xs text-ink-2">{repo.mode === "ghost" ? "Visitante · nada é salvo" : repo.mode === "local" ? "Modo local" : session?.email}</span>
         </div>
         <button
           type="button"

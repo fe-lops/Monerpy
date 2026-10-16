@@ -2,4 +2,5 @@
 export { AuthCard } from "./AuthCard";
 export { AuthTabs } from "./AuthTabs";
 export { BottomNav } from "./BottomNav";
+export { GhostBanner } from "./GhostBanner";
 export { Sidebar } from "./Sidebar";

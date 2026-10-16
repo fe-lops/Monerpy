@@ -34,7 +34,7 @@ export default function MaisPage() {
         <div className="grid size-[52px] flex-none place-items-center rounded-full bg-accent font-display text-lg font-extrabold text-on-accent">{initials}</div>
         <div className="flex min-w-0 flex-col">
           <span className="truncate font-display text-lg font-bold">{profile.display_name || "Minha conta"}</span>
-          <span className="row-sub truncate">{repo.mode === "local" ? "Modo local · dados neste navegador" : session?.email}</span>
+          <span className="row-sub truncate">{repo.mode === "ghost" ? "Visitante · nada é salvo" : repo.mode === "local" ? "Modo local · dados neste navegador" : session?.email}</span>
         </div>
       </div>
       <ul className="list panel">
