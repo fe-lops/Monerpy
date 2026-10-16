@@ -1,21 +1,24 @@
-// Adaptador local: guarda tudo no localStorage deste navegador.
-// Serve para desenvolver e demonstrar o app antes de conectar o Supabase.
+// Repositório sem servidor, com dois "depósitos":
+//  - browserStore: localStorage (modo local: desenvolver/demonstrar antes do Supabase).
+//  - memoryStore: só na memória (usuário fantasma /ghost-test-user: nada é salvo; recarregar zera).
 
-import { DEFAULT_TZ, todayISO } from "../domain/dates";
-import { buildInstallments } from "../domain/finance";
+import { addMonths, DEFAULT_TZ, todayISO } from "../domain/dates";
 import type { Category, InstallmentGroup, Profile, Reminder, Transaction } from "../domain/types";
 import { newId, type Repo, type SessionInfo, type Snapshot } from "./repo";
-import { DEFAULT_CATEGORIES, demoInstallment, demoTransactions } from "./seed";
+import { buildDemoData, DEFAULT_CATEGORIES } from "./seed";
 
 const DB_KEY = "monerpy:db:v1";
 const SESSION_KEY = "monerpy:local-session";
 const LOCAL_USER = "local-user";
 
-interface LocalDB extends Snapshot {
-  groups: InstallmentGroup[];
+export type LocalDB = Snapshot;
+
+export interface LocalStore {
+  read(): LocalDB | null;
+  write(db: LocalDB): void;
 }
 
-function freshDB(): LocalDB {
+export function freshDB(): LocalDB {
   return {
     profile: {
       user_id: LOCAL_USER,
@@ -33,31 +36,52 @@ function freshDB(): LocalDB {
   };
 }
 
-function read(): LocalDB {
-  try {
-    const raw = localStorage.getItem(DB_KEY);
-    if (raw) return JSON.parse(raw) as LocalDB;
-  } catch {
-    // dados corrompidos ou armazenamento bloqueado: recomeça
-  }
+/** Banco já preenchido com o conjunto de exemplo (usuário fantasma e "dados de exemplo"). */
+export function demoDB(displayName: string): LocalDB {
   const db = freshDB();
-  write(db);
+  const today = todayISO(db.profile.timezone);
+  const demo = buildDemoData(db.categories, today, newId);
+  db.transactions = demo.transactions;
+  db.groups = demo.groups;
+  db.profile = { ...db.profile, display_name: displayName, opening_balance: 250000, opening_balance_date: addMonths(today, -3), onboarded: true };
   return db;
 }
 
-function write(db: LocalDB) {
-  try {
-    localStorage.setItem(DB_KEY, JSON.stringify(db));
-  } catch {
-    throw new Error("Não foi possível salvar neste navegador (armazenamento cheio ou bloqueado).");
-  }
+export const browserStore: LocalStore = {
+  read() {
+    try {
+      const raw = localStorage.getItem(DB_KEY);
+      if (!raw) return null;
+      const db = JSON.parse(raw) as LocalDB;
+      db.groups = (db.groups ?? []).map(upgradeGroup); // bancos salvos por versões antigas
+      return db;
+    } catch {
+      return null; // dados corrompidos ou armazenamento bloqueado: recomeça
+    }
+  },
+  write(db) {
+    try {
+      localStorage.setItem(DB_KEY, JSON.stringify(db));
+    } catch {
+      throw new Error("Não foi possível salvar neste navegador (armazenamento cheio ou bloqueado).");
+    }
+  },
+};
+
+/** Depósito em memória: começa em `seed()` a cada carregamento da página. */
+export function memoryStore(seed: () => LocalDB): LocalStore {
+  let db: LocalDB | null = null;
+  return {
+    read: () => (db ??= seed()),
+    write: (next) => {
+      db = next;
+    },
+  };
 }
 
-function mutate<T>(fn: (db: LocalDB) => T): T {
-  const db = read();
-  const out = fn(db);
-  write(db);
-  return structuredClone(out);
+/** Grupos salvos antes da v0.6.0 não tinham kind/type/periodicity. */
+function upgradeGroup(g: InstallmentGroup): InstallmentGroup {
+  return { ...g, kind: g.kind ?? "INSTALLMENT", type: g.type ?? "EXPENSE", periodicity: g.periodicity ?? "MONTHLY", interval_days: g.interval_days ?? null, active: g.active ?? true };
 }
 
 function mustFind<T extends { id: string }>(list: T[], id: string, what: string): T {
@@ -67,9 +91,28 @@ function mustFind<T extends { id: string }>(list: T[], id: string, what: string)
 }
 
 export class LocalRepo implements Repo {
-  readonly mode = "local" as const;
+  constructor(
+    private store: LocalStore = browserStore,
+    readonly mode: "local" | "ghost" = "local",
+  ) {}
+
+  private read(): LocalDB {
+    const db = this.store.read();
+    if (db) return db;
+    const fresh = freshDB();
+    this.store.write(fresh);
+    return fresh;
+  }
+
+  private mutate<T>(fn: (db: LocalDB) => T): T {
+    const db = this.read();
+    const out = fn(db);
+    this.store.write(db);
+    return structuredClone(out);
+  }
 
   async getSession(): Promise<SessionInfo | null> {
+    if (this.mode === "ghost") return { userId: LOCAL_USER, email: null };
     try {
       return localStorage.getItem(SESSION_KEY) ? { userId: LOCAL_USER, email: null } : null;
     } catch {
@@ -77,10 +120,10 @@ export class LocalRepo implements Repo {
     }
   }
   async signIn() {
-    localStorage.setItem(SESSION_KEY, "1");
+    if (this.mode === "local") localStorage.setItem(SESSION_KEY, "1");
   }
   async signOut() {
-    localStorage.removeItem(SESSION_KEY);
+    if (this.mode === "local") localStorage.removeItem(SESSION_KEY);
   }
   async requestPasswordReset() {
     throw new Error("Recuperação de senha só funciona com o Supabase configurado.");
@@ -96,16 +139,15 @@ export class LocalRepo implements Repo {
   }
 
   async load(): Promise<Snapshot> {
-    const { profile, categories, transactions, reminders } = read();
-    return structuredClone({ profile, categories, transactions, reminders });
+    return structuredClone(this.read());
   }
 
   async updateProfile(patch: Partial<Omit<Profile, "user_id">>) {
-    return mutate((db) => Object.assign(db.profile, patch));
+    return this.mutate((db) => Object.assign(db.profile, patch));
   }
 
   async createCategory(c: Omit<Category, "id" | "is_archived">) {
-    return mutate((db) => {
+    return this.mutate((db) => {
       const exists = db.categories.some((x) => x.name.trim().toLowerCase() === c.name.trim().toLowerCase() && x.transaction_type === c.transaction_type);
       if (exists) throw new Error("Já existe uma categoria com esse nome.");
       const cat: Category = { ...c, id: newId(), is_archived: false };
@@ -115,11 +157,11 @@ export class LocalRepo implements Repo {
   }
 
   async updateCategory(id: string, patch: Partial<Omit<Category, "id">>) {
-    return mutate((db) => Object.assign(mustFind(db.categories, id, "Categoria"), patch));
+    return this.mutate((db) => Object.assign(mustFind(db.categories, id, "Categoria"), patch));
   }
 
   async createTransaction(t: Parameters<Repo["createTransaction"]>[0]) {
-    return mutate((db) => {
+    return this.mutate((db) => {
       const existing = db.transactions.find((x) => x.id === t.id);
       if (existing) return existing; // idempotente: clique duplo não duplica
       const tx: Transaction = {
@@ -136,30 +178,37 @@ export class LocalRepo implements Repo {
   }
 
   async updateTransaction(id: string, patch: Partial<Omit<Transaction, "id" | "created_at">>) {
-    return mutate((db) => Object.assign(mustFind(db.transactions, id, "Movimentação"), patch));
+    return this.mutate((db) => Object.assign(mustFind(db.transactions, id, "Movimentação"), patch));
   }
 
-  async createInstallmentPurchase(p: Parameters<Repo["createInstallmentPurchase"]>[0]) {
-    return mutate((db) => {
-      if (db.groups.some((g) => g.id === p.id)) return db.transactions.filter((t) => t.installment_group_id === p.id);
-      const parts = buildInstallments(p, newId, new Date().toISOString());
-      db.groups.push({
-        id: p.id,
-        description: p.description,
-        total_amount: p.total_amount,
-        installment_count: p.installment_count,
-        payment_method: "CREDIT_CARD",
-        first_due_date: p.first_due_date,
-        scope: p.scope,
-        category_id: p.category_id,
-      });
-      db.transactions.push(...parts);
-      return parts;
+  async createGroup(group: InstallmentGroup, transactions: Transaction[]) {
+    return this.mutate((db) => {
+      if (!db.groups.some((g) => g.id === group.id)) {
+        db.groups.push(group);
+        db.transactions.push(...transactions);
+      }
+      return db.transactions.filter((t) => t.installment_group_id === group.id);
+    });
+  }
+
+  async insertGenerated(transactions: Transaction[]) {
+    this.mutate((db) => {
+      const key = (t: Transaction) => `${t.installment_group_id}#${t.installment_number}`;
+      const have = new Set(db.transactions.map(key));
+      db.transactions.push(...transactions.filter((t) => !have.has(key(t))));
+    });
+  }
+
+  async endGroup(groupId: string, cancelTransactionIds: string[]) {
+    this.mutate((db) => {
+      mustFind(db.groups, groupId, "Cobrança").active = false;
+      const now = new Date().toISOString();
+      for (const t of db.transactions) if (cancelTransactionIds.includes(t.id)) Object.assign(t, { status: "CANCELLED", cancelled_at: now });
     });
   }
 
   async setReminderStatus(transactionId: string, remindAt: string, status: Reminder["status"]) {
-    return mutate((db) => {
+    return this.mutate((db) => {
       let r = db.reminders.find((x) => x.transaction_id === transactionId);
       if (!r) {
         r = { id: newId(), transaction_id: transactionId, remind_at: remindAt, status, channel: "IN_APP" };
@@ -173,20 +222,20 @@ export class LocalRepo implements Repo {
   }
 
   async resetAll() {
-    write(freshDB());
+    this.store.write(this.mode === "ghost" ? demoDB("Visitante") : freshDB());
   }
 
-  /** Preenche com movimentações de exemplo (só no modo local). */
+  /** Acrescenta o conjunto de exemplo aos dados atuais (modo local). */
   async seedDemo() {
-    const db = read();
-    const today = todayISO(db.profile.timezone);
-    db.transactions.push(...demoTransactions(db.categories, today, newId));
-    if (!db.profile.onboarded) {
-      db.profile.opening_balance = 250000;
-      db.profile.onboarded = true;
-      db.profile.display_name = db.profile.display_name || "Minha conta";
-    }
-    write(db);
-    await this.createInstallmentPurchase(demoInstallment(db.categories, today, newId));
+    this.mutate((db) => {
+      const today = todayISO(db.profile.timezone);
+      const demo = buildDemoData(db.categories, today, newId);
+      db.transactions.push(...demo.transactions);
+      db.groups.push(...demo.groups);
+      if (!db.profile.onboarded) {
+        Object.assign(db.profile, { opening_balance: 250000, opening_balance_date: addMonths(today, -3), onboarded: true });
+        db.profile.display_name ||= "Minha conta";
+      }
+    });
   }
 }

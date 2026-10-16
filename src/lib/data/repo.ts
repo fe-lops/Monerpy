@@ -1,6 +1,6 @@
 import type {
   Category,
-  NewInstallmentPurchase,
+  InstallmentGroup,
   NewTransaction,
   Profile,
   Reminder,
@@ -13,6 +13,8 @@ export interface Snapshot {
   categories: Category[];
   transactions: Transaction[];
   reminders: Reminder[];
+  /** Grupos de cobrança no crédito (parcelado/repetido e fixa mensal). */
+  groups: InstallmentGroup[];
 }
 
 export interface SessionInfo {
@@ -22,7 +24,8 @@ export interface SessionInfo {
 
 /** Contrato de acesso a dados. Implementado por LocalRepo (navegador) e SupabaseRepo. */
 export interface Repo {
-  readonly mode: "local" | "supabase";
+  /** local = navegador; ghost = visitante em memória (/ghost-test-user); supabase = produção. */
+  readonly mode: "local" | "ghost" | "supabase";
 
   getSession(): Promise<SessionInfo | null>;
   signIn(email: string, password: string): Promise<void>;
@@ -42,8 +45,15 @@ export interface Repo {
 
   createTransaction(t: NewTransaction & { id: string }): Promise<Transaction>;
   updateTransaction(id: string, patch: Partial<Omit<Transaction, "id" | "created_at">>): Promise<Transaction>;
-  /** Cria grupo + parcelas de forma atômica e idempotente (mesmo id = sem duplicar). */
-  createInstallmentPurchase(p: NewInstallmentPurchase): Promise<Transaction[]>;
+  /**
+   * Cria o grupo e suas cobranças (geradas por lib/domain/recurrence.ts) de forma atômica e
+   * idempotente: o mesmo group.id de novo não duplica nada. Retorna as cobranças do grupo.
+   */
+  createGroup(group: InstallmentGroup, transactions: Transaction[]): Promise<Transaction[]>;
+  /** Insere cobranças geradas (fixa mensal); ignora as que já existem (mesmo grupo + número). */
+  insertGenerated(transactions: Transaction[]): Promise<void>;
+  /** Encerra uma cobrança fixa: desativa o grupo e cancela as cobranças futuras informadas. */
+  endGroup(groupId: string, cancelTransactionIds: string[]): Promise<void>;
 
   setReminderStatus(transactionId: string, remindAt: string, status: ReminderStatus): Promise<Reminder>;
 
