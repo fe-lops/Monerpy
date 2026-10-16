@@ -16,7 +16,8 @@ function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
   const next = params.get("next");
-  const target = next && next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
+  // Volta para a página de origem, exceto /onboarding (o layout decide se a introdução é necessária).
+  const target = next && next.startsWith("/") && !next.startsWith("//") && next !== "/onboarding" ? next : "/dashboard";
   const [serverError, setServerError] = useState("");
   const local = repo.mode === "local";
 
