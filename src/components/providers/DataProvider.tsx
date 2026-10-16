@@ -32,7 +32,7 @@ interface DataCtx extends Partial<Snapshot> {
 
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
-  reload: () => Promise<void>;
+  reload: () => Promise<unknown>;
 
   /** `id` gerado uma vez por formulário: reenviar não duplica. */
   createTransaction: (t: NewTransaction, id?: string) => Promise<Transaction>;
@@ -76,21 +76,25 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [snap, setSnap] = useState<Snapshot | null>(null);
   const [scope, setScopeState] = useState<ScopeFilter>("ALL");
 
-  const load = useCallback(async () => {
+  /** Carrega sessão e dados. Retorna a mensagem de erro, se houver. */
+  const load = useCallback(async (): Promise<string | null> => {
     try {
       const s = await repo.getSession();
       setSession(s);
       if (!s) {
         setSnap(null);
         setStatus("anon");
-        return;
+        return null;
       }
       setSnap(await repo.load());
       setStatus("ready");
       setError(null);
+      return null;
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erro ao carregar os dados.");
+      const msg = e instanceof Error ? e.message : "Erro ao carregar os dados.";
+      setError(msg);
       setStatus("error");
+      return msg;
     }
   }, [repo]);
 
@@ -144,7 +148,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
     signIn: async (email, password) => {
       await repo.signIn(email, password);
-      await load();
+      // Login aceito, mas se os dados não carregarem o erro precisa aparecer no formulário.
+      const err = await load();
+      if (err) throw new Error(err);
     },
     signOut: async () => {
       await repo.signOut();
