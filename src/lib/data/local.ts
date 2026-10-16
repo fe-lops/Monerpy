@@ -24,6 +24,7 @@ function freshDB(): LocalDB {
       opening_balance_date: todayISO(),
       timezone: DEFAULT_TZ,
       onboarded: false,
+      is_admin: false,
     },
     categories: DEFAULT_CATEGORIES.map((c) => ({ ...c, id: newId(), is_archived: false })),
     transactions: [],
@@ -83,6 +84,12 @@ export class LocalRepo implements Repo {
   }
   async requestPasswordReset() {
     throw new Error("Recuperação de senha só funciona com o Supabase configurado.");
+  }
+  async getAccessToken() {
+    return null;
+  }
+  async verifyEmailToken() {
+    throw new Error("Links de e-mail só funcionam com o Supabase configurado.");
   }
   async updatePassword() {
     throw new Error("Troca de senha só funciona com o Supabase configurado.");

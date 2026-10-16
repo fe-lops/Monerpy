@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AuthCard } from "@/components/layout";
+import { AuthCard, AuthTabs } from "@/components/layout";
 import { useData } from "@/providers/DataProvider";
 import { Field, Spinner } from "@/components/ui";
 import { supabaseEnvProblems } from "@/lib/env";
@@ -62,6 +62,7 @@ function LoginForm() {
 
   return (
     <AuthCard title="Entrar" subtitle="Acesse seu controle de caixa.">
+      <AuthTabs active="login" />
       {status === "error" && !serverError && (
         <div className="panel flex flex-col gap-3 p-4 text-sm" role="alert">
           <strong className="text-neg">Você entrou, mas os dados não carregaram.</strong>

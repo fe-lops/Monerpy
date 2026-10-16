@@ -2,7 +2,8 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isSupabaseConfigured, SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/env";
 
-const PUBLIC = ["/login", "/recuperar-senha", "/redefinir-senha"];
+// Rotas acessíveis sem login. As rotas /api validam a sessão por conta própria.
+const PUBLIC = ["/login", "/registro", "/recuperar-senha", "/redefinir-senha", "/definir-senha", "/api/"];
 
 /**
  * Com o Supabase configurado: renova a sessão (cookies) e bloqueia rotas da área

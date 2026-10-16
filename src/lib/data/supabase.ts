@@ -29,6 +29,7 @@ function toProfile(r: Row): Profile {
     opening_balance_date: String(r.opening_balance_date),
     timezone: (r.timezone as string) ?? TZ,
     onboarded: Boolean(r.onboarded),
+    is_admin: Boolean(r.is_admin),
   };
 }
 
@@ -100,6 +101,15 @@ export class SupabaseRepo implements Repo {
   }
   async requestPasswordReset(email: string, redirectTo: string) {
     const { error } = await this.sb.auth.resetPasswordForEmail(email, { redirectTo });
+    fail(error);
+  }
+  async getAccessToken() {
+    const { data } = await this.sb.auth.getSession();
+    return data.session?.access_token ?? null;
+  }
+  async verifyEmailToken(tokenHash: string, type: "invite" | "magiclink" | "recovery") {
+    const { error } = await this.sb.auth.verifyOtp({ token_hash: tokenHash, type });
+    if (error && /expired|invalid/i.test(error.message)) throw new Error("Este link expirou ou já foi usado. Peça ao administrador para reenviar.");
     fail(error);
   }
   async updatePassword(password: string) {

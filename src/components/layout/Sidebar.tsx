@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, ChartColumn, Download, House, List, LogOut, Plus, Settings, Tags, Wallet } from "lucide-react";
+import { Bell, ChartColumn, Download, House, List, LogOut, Plus, Settings, Tags, UserCheck, Wallet } from "lucide-react";
 import { useReminders } from "@/hooks";
 import { useReady } from "@/providers/DataProvider";
 
@@ -26,6 +26,12 @@ const GROUPS = [
     ],
   },
 ];
+
+/** Visível apenas para administradores (profiles.is_admin). */
+const ADMIN_GROUP = {
+  label: "Administração",
+  items: [{ href: "/admin/registros", label: "Registros", icon: UserCheck, match: ["/admin"] }],
+};
 
 /** Navegação lateral do computador (substitui a barra inferior a partir de 1024 px). */
 export function Sidebar() {
@@ -53,7 +59,7 @@ export function Sidebar() {
       </Link>
 
       <nav className="flex flex-1 flex-col gap-5 overflow-y-auto">
-        {GROUPS.map((g) => (
+        {(profile.is_admin ? [...GROUPS, ADMIN_GROUP] : GROUPS).map((g) => (
           <div key={g.label} className="flex flex-col gap-1">
             <span className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-[.08em] text-ink-2">{g.label}</span>
             {g.items.map(({ href, label, icon: Icon, match }) => {

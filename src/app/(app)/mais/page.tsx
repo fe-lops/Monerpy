@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Bell, ChartColumn, ChevronRight, Download, Settings, Tags } from "lucide-react";
+import { Bell, ChartColumn, ChevronRight, Download, Settings, Tags, UserCheck } from "lucide-react";
 import { useReminders } from "@/hooks";
 import { useReady } from "@/providers/DataProvider";
 import { PageHeader, Screen } from "@/components/ui";
@@ -13,6 +13,9 @@ const ITEMS = [
   { href: "/exportar", icon: Download, name: "Exportar CSV", sub: "Planilha das movimentações" },
   { href: "/configuracoes", icon: Settings, name: "Configurações", sub: "Perfil, saldo inicial, tema e segurança" },
 ];
+
+/** Visível apenas para administradores. */
+const ADMIN_ITEM = { href: "/admin/registros", icon: UserCheck, name: "Registros", sub: "Aprovar ou recusar novos acessos" };
 
 export default function MaisPage() {
   const { profile, session, repo } = useReady();
@@ -35,7 +38,7 @@ export default function MaisPage() {
         </div>
       </div>
       <ul className="list panel">
-        {ITEMS.map(({ href, icon: Icon, name, sub }) => (
+        {(profile.is_admin ? [...ITEMS, ADMIN_ITEM] : ITEMS).map(({ href, icon: Icon, name, sub }) => (
           <li key={href}>
             <Link href={href} className="flex min-h-14 items-center justify-between gap-3 px-4 py-3.5 hover:bg-[color-mix(in_srgb,var(--text)_5%,transparent)]">
               <span className="flex min-w-0 items-center gap-3">
