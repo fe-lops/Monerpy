@@ -4,15 +4,15 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { CreditCard } from "lucide-react";
-import { useReady } from "@/components/providers/DataProvider";
-import { useToast } from "@/components/providers/ToastProvider";
-import { TransactionForm } from "@/components/TransactionForm";
+import { useReady } from "@/providers/DataProvider";
+import { useToast } from "@/providers/ToastProvider";
+import { TransactionForm } from "@/components/transactions";
 import { useSettleFlow } from "@/components/transactions";
 import { Empty, PageHeader, Screen, Sheet } from "@/components/ui";
-import { dmy } from "@/lib/dates";
-import { dueLabel, isOverdue, pendingDate } from "@/lib/finance";
-import { brl } from "@/lib/money";
-import { METHOD_LABEL, SCOPE_LABEL, STATUS_LABEL } from "@/lib/types";
+import { dmy } from "@/lib/domain/dates";
+import { dueLabel, isOverdue, pendingDate } from "@/lib/domain/finance";
+import { brl } from "@/lib/domain/money";
+import { METHOD_LABEL, SCOPE_LABEL, STATUS_LABEL } from "@/lib/domain/types";
 
 export default function MovimentacaoPage() {
   const { id } = useParams<{ id: string }>();

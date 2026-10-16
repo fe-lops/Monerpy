@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Download, Search, SlidersHorizontal } from "lucide-react";
-import { useReady } from "@/components/providers/DataProvider";
+import { useReady } from "@/providers/DataProvider";
 import { TxRow } from "@/components/transactions";
 import { Empty, Field, PageHeader, Screen, ScopeSeg, Seg, Sheet } from "@/components/ui";
-import { dayGroupLabel } from "@/lib/dates";
-import { applyFilter, displayDate, EMPTY_FILTER, type HistoryFilter } from "@/lib/finance";
-import { brl } from "@/lib/money";
-import { METHOD_LABEL } from "@/lib/types";
+import { dayGroupLabel } from "@/lib/domain/dates";
+import { applyFilter, displayDate, EMPTY_FILTER, type HistoryFilter } from "@/lib/domain/finance";
+import { brl } from "@/lib/domain/money";
+import { METHOD_LABEL } from "@/lib/domain/types";
 
 export default function MovimentacoesPage() {
   const { transactions, categories, today, scope, setScope } = useReady();

@@ -1,12 +1,12 @@
 "use client";
 
 import { BarChart, InOutChart } from "@/components/charts";
-import { useMonthPeriod } from "@/components/hooks";
-import { useReady } from "@/components/providers/DataProvider";
+import { useMonthPeriod } from "@/hooks";
+import { useReady } from "@/providers/DataProvider";
 import { PageHeader, Screen, ScopeSeg } from "@/components/ui";
-import { monthShort } from "@/lib/dates";
-import { cashProjection, expensesByCategory, pendingTotals, projectedByMonth, realizedByMonth, realizedInPeriod } from "@/lib/finance";
-import { brl } from "@/lib/money";
+import { monthShort } from "@/lib/domain/dates";
+import { cashProjection, expensesByCategory, pendingTotals, projectedByMonth, realizedByMonth, realizedInPeriod } from "@/lib/domain/finance";
+import { brl } from "@/lib/domain/money";
 
 /** Relatórios simples de caixa (PRD §5): sem lucro por atendimento. */
 export default function RelatoriosPage() {

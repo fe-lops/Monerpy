@@ -4,10 +4,10 @@ import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AuthCard } from "@/components/AuthCard";
-import { useData } from "@/components/providers/DataProvider";
+import { AuthCard } from "@/components/layout";
+import { useData } from "@/providers/DataProvider";
 import { Field } from "@/components/ui";
-import { recoverSchema, type RecoverInput } from "@/lib/schemas";
+import { recoverSchema, type RecoverInput } from "@/lib/domain/schemas";
 
 export default function RecuperarSenhaPage() {
   const { repo } = useData();

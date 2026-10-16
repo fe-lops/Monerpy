@@ -2,7 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
-import { TransactionForm } from "@/components/TransactionForm";
+import { TransactionForm } from "@/components/transactions";
 import { PageHeader, Screen } from "@/components/ui";
 
 function NovaInner() {

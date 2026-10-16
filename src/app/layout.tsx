@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Inter } from "next/font/google";
-import { DataProvider } from "@/components/providers/DataProvider";
-import { ToastProvider } from "@/components/providers/ToastProvider";
+import { DataProvider } from "@/providers/DataProvider";
+import { ToastProvider } from "@/providers/ToastProvider";
 import "./globals.css";
 
 const bricolage = Bricolage_Grotesque({ variable: "--font-bricolage", subsets: ["latin"], weight: ["600", "700", "800"] });

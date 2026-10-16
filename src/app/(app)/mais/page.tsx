@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { Bell, ChartColumn, ChevronRight, Download, Settings, Tags } from "lucide-react";
-import { useReminders } from "@/components/hooks";
-import { useReady } from "@/components/providers/DataProvider";
+import { useReminders } from "@/hooks";
+import { useReady } from "@/providers/DataProvider";
 import { PageHeader, Screen } from "@/components/ui";
 
 const ITEMS = [

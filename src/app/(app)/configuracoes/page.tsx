@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useReady } from "@/components/providers/DataProvider";
-import { useToast } from "@/components/providers/ToastProvider";
+import { useReady } from "@/providers/DataProvider";
+import { useToast } from "@/providers/ToastProvider";
 import { Field, MoneyInput, PageHeader, Screen, Seg, Sheet } from "@/components/ui";
-import { brl } from "@/lib/money";
-import { fieldErrors, newPasswordSchema, openingSchema } from "@/lib/schemas";
+import { brl } from "@/lib/domain/money";
+import { fieldErrors, newPasswordSchema, openingSchema } from "@/lib/domain/schemas";
 
 const TIMEZONES: [string, string][] = [
   ["America/Sao_Paulo", "Brasília (SP, RJ, ES, MG, Sul, NE…)"],

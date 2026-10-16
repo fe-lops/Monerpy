@@ -1,9 +1,9 @@
 // Adaptador local: guarda tudo no localStorage deste navegador.
 // Serve para desenvolver e demonstrar o app antes de conectar o Supabase.
 
-import { DEFAULT_TZ, todayISO } from "../dates";
-import { buildInstallments } from "../finance";
-import type { Category, InstallmentGroup, Profile, Reminder, Transaction } from "../types";
+import { DEFAULT_TZ, todayISO } from "../domain/dates";
+import { buildInstallments } from "../domain/finance";
+import type { Category, InstallmentGroup, Profile, Reminder, Transaction } from "../domain/types";
 import { newId, type Repo, type SessionInfo, type Snapshot } from "./repo";
 import { DEFAULT_CATEGORIES, demoInstallment, demoTransactions } from "./seed";
 

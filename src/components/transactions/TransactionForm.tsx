@@ -3,15 +3,15 @@
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { CreditCard } from "lucide-react";
-import { useReady } from "@/components/providers/DataProvider";
-import { useToast } from "@/components/providers/ToastProvider";
+import { useReady } from "@/providers/DataProvider";
+import { useToast } from "@/providers/ToastProvider";
 import { Field, MoneyInput, Seg, Sheet } from "@/components/ui";
 import { newId } from "@/lib/data";
-import { addMonths, dmy } from "@/lib/dates";
-import { pendingDate, splitInstallments } from "@/lib/finance";
-import { brl } from "@/lib/money";
-import { fieldErrors, installmentSchema, transactionSchema, type TransactionInput } from "@/lib/schemas";
-import type { PaymentMethod, Scope, Transaction, TxType } from "@/lib/types";
+import { addMonths, dmy } from "@/lib/domain/dates";
+import { pendingDate, splitInstallments } from "@/lib/domain/finance";
+import { brl } from "@/lib/domain/money";
+import { fieldErrors, installmentSchema, transactionSchema, type TransactionInput } from "@/lib/domain/schemas";
+import type { PaymentMethod, Scope, Transaction, TxType } from "@/lib/domain/types";
 
 const METHODS_ALL: [PaymentMethod, string][] = [
   ["UNSPECIFIED", "A definir"],

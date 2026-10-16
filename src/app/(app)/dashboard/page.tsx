@@ -4,13 +4,13 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { Bell } from "lucide-react";
 import { BarChart } from "@/components/charts";
-import { useMonthPeriod, useReminders } from "@/components/hooks";
-import { useReady } from "@/components/providers/DataProvider";
+import { useMonthPeriod, useReminders } from "@/hooks";
+import { useReady } from "@/providers/DataProvider";
 import { PendingRow, TxRow, useSettleFlow } from "@/components/transactions";
 import { Empty, Screen, ScopeSeg } from "@/components/ui";
-import { addDays } from "@/lib/dates";
-import { cashProjection, displayDate, expensesByCategory, inScope, pendingDate, pendingTotals, realizedInPeriod } from "@/lib/finance";
-import { brl } from "@/lib/money";
+import { addDays } from "@/lib/domain/dates";
+import { cashProjection, displayDate, expensesByCategory, inScope, pendingDate, pendingTotals, realizedInPeriod } from "@/lib/domain/finance";
+import { brl } from "@/lib/domain/money";
 
 function Badge({ late, count }: { late: number; count: number }) {
   if (late) return <span className="badge badge-neg">{late === 1 ? "1 atrasada" : `${late} atrasadas`}</span>;

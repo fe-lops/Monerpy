@@ -1,4 +1,4 @@
-import { PendingScreen } from "@/components/PendingScreen";
+import { PendingScreen } from "@/components/transactions";
 
 export default function Page() {
   return <PendingScreen kind="pagar" />;

@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Bell, ChartColumn, Download, House, List, LogOut, Plus, Settings, Tags, Wallet } from "lucide-react";
-import { useReminders } from "@/components/hooks";
-import { useReady } from "@/components/providers/DataProvider";
+import { useReminders } from "@/hooks";
+import { useReady } from "@/providers/DataProvider";
 
 const GROUPS = [
   {

@@ -2,10 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { AuthCard } from "@/components/AuthCard";
-import { useReady } from "@/components/providers/DataProvider";
+import { AuthCard } from "@/components/layout";
+import { useReady } from "@/providers/DataProvider";
 import { Field, MoneyInput, Seg } from "@/components/ui";
-import { fieldErrors, openingSchema } from "@/lib/schemas";
+import { fieldErrors, openingSchema } from "@/lib/domain/schemas";
 
 /** Configuração inicial: saldo total de abertura (PRD §3 e §7 — não é uma receita). */
 export default function OnboardingPage() {

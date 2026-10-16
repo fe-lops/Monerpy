@@ -2,11 +2,11 @@
 
 import { useParams } from "next/navigation";
 import { useMemo } from "react";
-import { useReady } from "@/components/providers/DataProvider";
+import { useReady } from "@/providers/DataProvider";
 import { PendingRow, TxRow, useSettleFlow } from "@/components/transactions";
 import { Empty, PageHeader, Screen } from "@/components/ui";
-import { brl } from "@/lib/money";
-import { SCOPE_LABEL } from "@/lib/types";
+import { brl } from "@/lib/domain/money";
+import { SCOPE_LABEL } from "@/lib/domain/types";
 
 /** Compra parcelada: cada parcela tem vencimento e status próprios (regra 15). */
 export default function ParcelamentoPage() {

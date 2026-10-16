@@ -2,9 +2,9 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { BottomNav } from "@/components/BottomNav";
-import { Sidebar } from "@/components/Sidebar";
-import { useData } from "@/components/providers/DataProvider";
+import { BottomNav } from "@/components/layout";
+import { Sidebar } from "@/components/layout";
+import { useData } from "@/providers/DataProvider";
 import { Screen, Spinner } from "@/components/ui";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
