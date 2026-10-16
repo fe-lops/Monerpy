@@ -70,6 +70,10 @@ recusa em **Registros** (barra lateral / Mais). Aprovado: a pessoa recebe um lin
 4. Configure o SMTP (seção acima) e faça **Redeploy**.
 5. Em **Authentication → URL Configuration → Redirect URLs**, adicione `https://SUA-URL/definir-senha`.
 
+Regras: um e-mail **recusado não pode pedir acesso de novo** (a tela orienta a procurar o suporte; defina
+`SUPPORT_EMAIL` para exibir o contato) e um e-mail já aprovado é orientado a entrar. Em **Recusados**, o
+botão **Aprovar cadastro** move o pedido para Aprovados e envia o link de criação de senha.
+
 Sem SMTP, a aprovação usa o convite padrão do Supabase (sujeito ao limite de 2/hora) e a recusa não envia e-mail.
 
 ## Estrutura
