@@ -5,7 +5,7 @@ import { SupabaseRepo } from "./supabase";
 
 import { isSupabaseConfigured, SUPABASE_ANON_KEY, SUPABASE_URL } from "../env";
 
-export { isSupabaseConfigured, missingSupabaseEnv } from "../env";
+export { isSupabaseConfigured, supabaseEnvProblems } from "../env";
 
 let repo: Repo | null = null;
 
