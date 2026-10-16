@@ -71,6 +71,8 @@ function translate(msg: string): string {
   if (/invalid login credentials/i.test(msg)) return "E-mail ou senha incorretos.";
   if (/email not confirmed/i.test(msg)) return "Confirme seu e-mail antes de entrar.";
   if (/duplicate key.*categories/i.test(msg)) return "Já existe uma categoria com esse nome.";
+  if (/auth session missing|session.*not found/i.test(msg))
+    return "Sessão de redefinição não encontrada. Abra o link no mesmo navegador em que pediu a redefinição ou peça um novo link.";
   if (/rate limit/i.test(msg)) return "Muitas tentativas. Aguarde alguns minutos.";
   if (/password should be/i.test(msg)) return "A senha precisa ter pelo menos 6 caracteres.";
   if (/does not exist|could not find the (table|function)|schema cache/i.test(msg))
