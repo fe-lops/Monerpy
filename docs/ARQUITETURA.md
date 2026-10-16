@@ -1,0 +1,70 @@
+# Arquitetura do Monerpy
+
+Guia rápido para quem vai ler ou alterar o código. Requisitos de produto: `../Planejamento/dataset/PRD_WebApp_Gestao_Financeira_v1_1.md`.
+
+## Visão geral
+
+App Next.js (App Router) que roda inteiro no navegador da usuária. Os dados vêm de um **repositório**
+trocável: Supabase (produção) ou `localStorage` (desenvolvimento/demonstração, quando não há `.env.local`).
+A segurança dos dados é garantida pelo **RLS do PostgreSQL**, não pelo frontend.
+
+```
+ Página (src/app)  ──usa──▶  Componentes (src/components)
+        │                          │
+        └──────▶  useData() / useReady()  (src/providers/DataProvider)
+                         │
+                         ├──▶ Regras puras   (src/lib/domain)   saldo, pendências, parcelas, CSV…
+                         └──▶ Repositório    (src/lib/data)     LocalRepo | SupabaseRepo
+                                                   │
+                                                   └──▶ Supabase (Auth + PostgreSQL + RLS)
+```
+
+## Camadas e pastas
+
+| Pasta | Responsabilidade | Pode importar de |
+|---|---|---|
+| `src/app/` | Rotas. `(app)/` é a área autenticada; `login`, `recuperar-senha` e `redefinir-senha` são públicas. Páginas montam a tela e chamam ações do provider. | tudo abaixo |
+| `src/components/ui/` | Peças visuais genéricas do Design System (`Screen`, `Seg`, `Field`, `Sheet`…). **Sem regra de negócio.** | `lib/domain` (só formatação) |
+| `src/components/layout/` | Moldura do app: `Sidebar` (computador), `BottomNav` (celular), `AuthCard`. | `ui`, `providers`, `hooks` |
+| `src/components/transactions/` | Tudo de lançamentos: formulário, linhas, baixa (`useSettleFlow`), pendências, seletor Entrada/Saída. | `ui`, `providers`, `lib/domain` |
+| `src/components/charts/` | Gráficos em CSS puro. | `lib/domain` |
+| `src/providers/` | Estado global: `DataProvider` (sessão, dados, ações) e `ToastProvider` (avisos). | `lib` |
+| `src/hooks/` | Hooks reutilizáveis entre telas (`useReminders`, `useMonthPeriod`). | `providers`, `lib/domain` |
+| `src/lib/domain/` | **Regras de negócio puras**, sem React e sem rede: tipos, dinheiro, datas, finanças, validação (Zod). Tudo testável. | apenas entre si |
+| `src/lib/data/` | Acesso a dados. `repo.ts` define o contrato; `local.ts` e `supabase.ts` o implementam. | `lib/domain`, `lib/env` |
+| `src/lib/env.ts` | Leitura e validação das variáveis `NEXT_PUBLIC_SUPABASE_*`. | — |
+| `src/middleware.ts` | Renova a sessão e protege rotas quando o Supabase está configurado. | `lib/env` |
+| `supabase/migrations/` | Esquema SQL versionado: tabelas, constraints, RLS, gatilhos e funções. | — |
+
+Regra de ouro: **dependências apontam para baixo** (`app → components → providers → lib`). `lib/domain`
+não conhece React nem Supabase.
+
+## Convenções
+
+- **Dinheiro em centavos inteiros** no app (`number`), `NUMERIC(14,2)` no banco. Nunca `float` para somar.
+  Conversões só em `lib/data/supabase.ts` (`centsToNumeric` / `numericToCents`).
+- **Datas** como texto `YYYY-MM-DD`, calculadas no fuso `America/Sao_Paulo` (`lib/domain/dates.ts`).
+- **Nomes**: código e tipos em inglês (`Transaction`, `settle`); textos de interface, comentários e
+  rotas em português (`/contas-a-pagar`).
+- **Um componente por arquivo**, nome do arquivo = nome do componente. Cada pasta exporta pelo seu
+  `index.ts`; dentro da mesma pasta, importe pelo caminho relativo (`./PendingRow`) para evitar ciclos.
+- **Estilos**: tokens de cor em `src/app/globals.css` (`:root` e `[data-theme="light"]`); componentes
+  usam classes do Design System (`.panel`, `.seg`, `.cta`…) e utilitários Tailwind. Celular primeiro;
+  `lg:` (≥ 1024 px) para computador.
+- **Idempotência**: lançamentos e parcelamentos recebem `id` gerado no cliente; reenviar não duplica.
+- **Nada é apagado**: lançamentos são cancelados (`status = CANCELLED`), preservando o histórico.
+
+## Onde mexer para…
+
+| Tarefa | Arquivos |
+|---|---|
+| Nova regra de cálculo | `lib/domain/finance.ts` + teste em `finance.test.ts` |
+| Novo campo em lançamento | `lib/domain/types.ts`, `schemas.ts`, `lib/data/*`, nova migration em `supabase/migrations/`, `TransactionForm.tsx` |
+| Nova tela | `src/app/(app)/<rota>/page.tsx`; item de menu em `components/layout/Sidebar.tsx` e/ou `BottomNav.tsx` |
+| Novo componente visual genérico | `components/ui/<Nome>.tsx` + export em `components/ui/index.ts` |
+| Mudar cores/tema | tokens em `src/app/globals.css` |
+
+## Testes
+
+`npm test` roda os testes de `lib/domain` e `lib/env` (Vitest), incluindo os critérios de aceite do PRD
+(§11). Ao alterar uma regra financeira, adicione o caso correspondente antes de mudar o código.
