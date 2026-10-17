@@ -6,3 +6,5 @@ export { TransactionForm } from "./TransactionForm";
 export { PendingScreen } from "./PendingScreen";
 export { TxTypeToggle } from "./TxTypeToggle";
 export { CreditModePicker, CREDIT_MODE_LABEL, type CreditMode } from "./CreditModePicker";
+export { CategoryPicker } from "./CategoryPicker";
+export { categoryIcon } from "./categoryIcons";
