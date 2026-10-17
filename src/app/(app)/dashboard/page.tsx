@@ -67,12 +67,16 @@ export default function DashboardPage() {
 
       {/* Faixa 1 — celular: saldo, contexto, cartões lado a lado. Computador: 3 colunas. */}
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3 lg:gap-6">
-        <section className="flex flex-col justify-center gap-1 rounded-xl bg-accent px-4 py-5 text-center text-on-accent lg:items-start lg:px-6 lg:text-left" aria-label="Saldo">
+        {/* Cartão verde-limão; com saldo NEGATIVO o cartão inteiro fica vermelho (texto branco). */}
+        <section
+          className="balance-card flex flex-col justify-center gap-1 rounded-xl px-4 py-5 text-center lg:items-start lg:px-6 lg:text-left"
+          data-negative={balance < 0}
+          aria-label={balance < 0 ? "Saldo negativo" : "Saldo"}
+        >
           <span>Saldo total disponível</span>
-          {/* Negativo em vermelho (tom próprio para o fundo verde-limão). */}
-          <span className={`num font-display text-[36px] font-bold leading-[44px] tracking-[-0.01em] ${balance < 0 ? "text-[var(--neg-on-accent)]" : ""}`}>{brl(balance)}</span>
+          <span className="num font-display text-[36px] font-bold leading-[44px] tracking-[-0.01em]">{brl(balance)}</span>
           <span className="text-[13px] leading-[18px] opacity-80">
-            Projeção estimada: <span className={`num font-semibold ${projection < 0 ? "text-[var(--neg-on-accent)]" : ""}`}>{brl(projection)}</span>
+            Projeção estimada: <span className="num font-semibold">{brl(projection)}</span>
           </span>
         </section>
 

@@ -12,7 +12,7 @@ export function BarChart({ rows, label }: { rows: { name: string; total: number 
       <div className="relative mt-[22px] h-[168px]">
         {ticks.map((t) => (
           <div key={t} className="absolute inset-x-0 border-t border-line" style={{ bottom: `${(t / top) * 100}%` }}>
-            <span className="num absolute -top-[9px] left-0 w-[34px] bg-card text-[11px] leading-4 text-ink-2">{short(t)}</span>
+            <span className="num absolute -top-[9px] left-0 w-[38px] whitespace-nowrap bg-card text-[10px] leading-4 text-ink-2">{short(t)}</span>
           </div>
         ))}
         <div className="absolute inset-y-0 left-10 right-0 gap-1" style={equalColumns(rows.length)}>
