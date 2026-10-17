@@ -3,6 +3,7 @@
 // ⚠️ Ao criar uma funcionalidade nova, inclua um exemplo dela em `buildDemoData`:
 // é o que o visitante de /ghost-test-user vê.
 
+import { OTHER_CATEGORY_NAME } from "../domain/categories";
 import { addDays, addMonths } from "../domain/dates";
 import { buildGroup } from "../domain/recurrence";
 import type { Category, InstallmentGroup, NewTransactionGroup, PaymentMethod, Scope, Transaction, TxType } from "../domain/types";
@@ -26,6 +27,7 @@ export const DEFAULT_CATEGORIES: { name: string; transaction_type: TxType; defau
     "Reembolsos & Estornos",
     "Presentes & Doações Recebidas",
     "Empréstimos Recebidos",
+    OTHER_CATEGORY_NAME,
   ].map(income),
   ...[
     "Aluguel & Condomínio",
@@ -68,6 +70,7 @@ export const DEFAULT_CATEGORIES: { name: string; transaction_type: TxType; defau
     "Tarifas Bancárias & Anuidade",
     "Pagamento de Dívidas & Juros",
     "Impostos & Contribuições",
+    OTHER_CATEGORY_NAME,
   ].map(expense),
 ];
 
@@ -130,6 +133,7 @@ export function buildDemoData(categories: Category[], today: string, makeId: () 
     settled("EXPENSE", "PERSONAL", "Jantar", "Restaurantes & Bares", 8600, 3, "CREDIT_CARD"),
     settled("EXPENSE", "PERSONAL", "Tênis de corrida", "Roupas & Acessórios", 25990, 5, "CREDIT_CARD"), // crédito não recorrente
     settled("EXPENSE", "PERSONAL", "Farmácia", "Farmácia & Medicamentos", 4590, 11, "PIX"),
+    settled("EXPENSE", "PERSONAL", "Cópia de chaves", "Outros", 2500, 2, "PIX"), // categoria "Outros" (v0.7.1)
     settled("EXPENSE", "BUSINESS", "Gasolina", "Combustível", 12000, 35, "PIX"),
     settled("EXPENSE", "PERSONAL", "Aluguel", "Aluguel & Condomínio", 90000, 33, "PIX"),
     settled("EXPENSE", "PERSONAL", "Delivery", "Delivery & Apps de Comida", 5200, 40, "CREDIT_CARD"),

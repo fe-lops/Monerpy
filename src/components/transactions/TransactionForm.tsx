@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Field, MoneyInput, Seg, Sheet } from "@/components/ui";
 import { newId } from "@/lib/data";
+import { findOtherCategory, selectableCategories } from "@/lib/domain/categories";
 import { addMonths, dmy } from "@/lib/domain/dates";
 import { pendingDate } from "@/lib/domain/finance";
 import { brl } from "@/lib/domain/money";
@@ -12,6 +13,7 @@ import { fieldErrors, groupSchema, transactionSchema, type TransactionInput } fr
 import { PERIODICITY_LABEL, type PaymentMethod, type Periodicity, type Scope, type Transaction, type TxType } from "@/lib/domain/types";
 import { useReady } from "@/providers/DataProvider";
 import { useToast } from "@/providers/ToastProvider";
+import { CategoryPicker } from "./CategoryPicker";
 import { CreditModePicker, type CreditMode } from "./CreditModePicker";
 import { TxTypeToggle } from "./TxTypeToggle";
 
@@ -51,7 +53,8 @@ export function TransactionForm({ initialType = "EXPENSE", editing }: Props) {
   const [amount, setAmount] = useState(editing?.amount ?? 0);
   const [description, setDescription] = useState(editing?.description ?? "");
   const [scope, setScope] = useState<Scope>(editing?.scope ?? (globalScope === "PERSONAL" ? "PERSONAL" : "BUSINESS"));
-  const [categoryId, setCategoryId] = useState(editing?.category_id ?? "");
+  // Lançamento novo começa com "Outros" do tipo; edição mantém a categoria salva.
+  const [categoryId, setCategoryId] = useState(editing ? (editing.category_id ?? "") : (findOtherCategory(categories, initialType)?.id ?? ""));
   const initialStatus = editing?.status === "SETTLED" ? "SETTLED" : editing ? "PENDING" : initialType === "INCOME" ? "PENDING" : "SETTLED";
   const [status, setStatus] = useState<"PENDING" | "SETTLED">(initialStatus);
   const [refDate, setRefDate] = useState(editing ? (pendingDate(editing) ?? "") : initialType === "INCOME" ? "" : today);
@@ -82,17 +85,11 @@ export function TransactionForm({ initialType = "EXPENSE", editing }: Props) {
   const daysNum = periodicity === "CUSTOM" ? Number(customDays) || 0 : null;
 
   // Categorias ativas do tipo (Entrada/Saída), em ordem alfabética. Arquivadas não aparecem.
-  const options = useMemo(
-    () =>
-      categories
-        .filter((c) => c.transaction_type === type && (!c.is_archived || c.id === editing?.category_id))
-        .sort((a, b) => a.name.localeCompare(b.name, "pt-BR")),
-    [categories, type, editing?.category_id],
-  );
+  const options = useMemo(() => selectableCategories(categories, type, editing?.category_id), [categories, type, editing?.category_id]);
 
   function changeType(t: TxType) {
     setType(t);
-    setCategoryId("");
+    setCategoryId(findOtherCategory(categories, t)?.id ?? ""); // "Outros" do novo tipo
     setCreditMode(method === "CREDIT_CARD" ? "SINGLE" : null);
     setStatus(t === "INCOME" ? "PENDING" : "SETTLED");
     setRefDate(t === "INCOME" ? "" : today);
@@ -274,21 +271,13 @@ export function TransactionForm({ initialType = "EXPENSE", editing }: Props) {
       </div>
 
       <Field label="Categoria" error={errors.category_id}>
-        {(id) => (
-          <select id={id} className="field" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} aria-invalid={!!errors.category_id}>
-            <option value="">Selecione a categoria</option>
-            {options.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        )}
+        {(id) => <CategoryPicker id={id} options={options} value={categoryId} onChange={setCategoryId} invalid={!!errors.category_id} />}
       </Field>
 
       <div>
         <span className="flabel">{payLabel}</span>
-        <Seg label={payLabel} small value={method} onChange={changeMethod} options={status === "SETTLED" && !groupMode ? METHODS_KNOWN : METHODS_ALL} />
+        {/* "A definir" só faz sentido num lançamento simples ainda pendente (não pago e sem cobranças no crédito). */}
+        <Seg label={payLabel} small value={method} onChange={changeMethod} options={status === "PENDING" && !groupMode ? METHODS_ALL : METHODS_KNOWN} />
         {errors.payment_method && <p className="error mt-1.5">{errors.payment_method}</p>}
       </div>
 

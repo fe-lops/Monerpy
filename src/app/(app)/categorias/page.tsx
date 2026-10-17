@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Pencil, Plus } from "lucide-react";
+import { categoryIcon } from "@/components/transactions";
 import { useReady } from "@/providers/DataProvider";
 import { useToast } from "@/providers/ToastProvider";
 import { Empty, Field, PageHeader, Screen, SectionTitle, Seg, Sheet } from "@/components/ui";
@@ -71,7 +72,9 @@ export default function CategoriasPage() {
     }
   }
 
-  const row = (c: Category) => (
+  const row = (c: Category) => {
+    const Icon = categoryIcon(c.name);
+    return (
     <li key={c.id}>
       <button
         type="button"
@@ -81,14 +84,18 @@ export default function CategoriasPage() {
           setDraft({ id: c.id, name: c.name, transaction_type: c.transaction_type, default_scope: c.default_scope });
         }}
       >
-        <span className="flex min-w-0 flex-col">
+        <span className="grid size-10 flex-none place-items-center rounded-full bg-input text-ink-2">
+          <Icon size={18} aria-hidden />
+        </span>
+        <span className="flex min-w-0 flex-1 flex-col">
           <span className={`row-name ${c.is_archived ? "text-ink-2" : ""}`}>{c.name}</span>
           <span className="row-sub">{usage.get(c.id) ?? 0} lançamentos</span>
         </span>
         <Pencil size={18} className="flex-none text-ink-2" aria-hidden />
       </button>
     </li>
-  );
+    );
+  };
 
   const editingCat = draft?.id ? categories.find((c) => c.id === draft.id) : undefined;
 

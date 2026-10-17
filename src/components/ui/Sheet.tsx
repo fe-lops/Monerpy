@@ -14,10 +14,12 @@ interface SheetProps {
    * é removida ao fechar; uma navegação logo depois disputaria com essa remoção).
    */
   closeOnBack?: boolean;
+  /** Janela menor (até 70% da altura): a tela de trás continua visível, escurecida. */
+  compact?: boolean;
 }
 
 /** Folha inferior modal (padrão do Design System para formulários rápidos). */
-export function Sheet({ open, onClose, title, children, closeOnBack = false }: SheetProps) {
+export function Sheet({ open, onClose, title, children, closeOnBack = false, compact = false }: SheetProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   // Guarda o onClose mais recente sem reexecutar o efeito abaixo. As telas passam
@@ -68,7 +70,7 @@ export function Sheet({ open, onClose, title, children, closeOnBack = false }: S
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="anim-sheet relative flex max-h-[92dvh] w-full max-w-[480px] flex-col gap-4 overflow-y-auto rounded-t-3xl border-t border-line bg-card px-5 pb-[calc(24px+env(safe-area-inset-bottom))] pt-5 outline-none md:max-w-[560px] lg:max-h-[85dvh] lg:rounded-3xl lg:border lg:px-7 lg:pb-7 lg:pt-6 lg:shadow-[0_30px_80px_rgb(0_0_0/.45)]"
+        className={`anim-sheet relative flex ${compact ? "max-h-[70dvh]" : "max-h-[92dvh]"} w-full max-w-[480px] flex-col gap-4 overflow-y-auto rounded-t-3xl border-t border-line bg-card px-5 pb-[calc(24px+env(safe-area-inset-bottom))] pt-5 outline-none md:max-w-[560px] ${compact ? "lg:max-h-[70dvh]" : "lg:max-h-[85dvh]"} lg:rounded-3xl lg:border lg:px-7 lg:pb-7 lg:pt-6 lg:shadow-[0_30px_80px_rgb(0_0_0/.45)]`}
       >
         <div className="flex items-center justify-between gap-3">
           <h2 className="font-display text-2xl font-bold">{title}</h2>

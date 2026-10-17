@@ -2,6 +2,7 @@
 //  - browserStore: localStorage (modo local: desenvolver/demonstrar antes do Supabase).
 //  - memoryStore: só na memória (usuário fantasma /ghost-test-user: nada é salvo; recarregar zera).
 
+import { findOtherCategory, OTHER_CATEGORY_NAME } from "../domain/categories";
 import { addMonths, DEFAULT_TZ, todayISO } from "../domain/dates";
 import type { Category, InstallmentGroup, Profile, Reminder, Transaction } from "../domain/types";
 import { newId, type Repo, type SessionInfo, type Snapshot } from "./repo";
@@ -54,6 +55,7 @@ export const browserStore: LocalStore = {
       if (!raw) return null;
       const db = JSON.parse(raw) as LocalDB;
       db.groups = (db.groups ?? []).map(upgradeGroup); // bancos salvos por versões antigas
+      ensureOtherCategories(db); // "Outros" chegou na v0.7.1
       return db;
     } catch {
       return null; // dados corrompidos ou armazenamento bloqueado: recomeça
@@ -77,6 +79,14 @@ export function memoryStore(seed: () => LocalDB): LocalStore {
       db = next;
     },
   };
+}
+
+/** Garante a categoria "Outros" para Entrada e Saída (bancos salvos antes da v0.7.1). */
+function ensureOtherCategories(db: LocalDB) {
+  for (const type of ["INCOME", "EXPENSE"] as const) {
+    if (!findOtherCategory(db.categories, type))
+      db.categories.push({ id: newId(), name: OTHER_CATEGORY_NAME, transaction_type: type, default_scope: "PERSONAL", is_archived: false });
+  }
 }
 
 /** Grupos salvos antes da v0.6.0 não tinham kind/type/periodicity. */
