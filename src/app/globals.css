@@ -21,6 +21,8 @@
   /* Cores sólidas de Entrada (verde) e Saída (vermelho), com texto branco por cima. Iguais nos dois temas. */
   --income-solid: #16a34a;
   --expense-solid: #dc2626;
+  /* Vermelho legível SOBRE o verde-limão (cartão do saldo): contraste ~4,5:1. Igual nos dois temas. */
+  --neg-on-accent: #b91c1c;
   --seg-on: #ffffff;
   --seg-on-text: #0f172a;
   --bd-pagar: #334155;
