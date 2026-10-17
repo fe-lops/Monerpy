@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Bell, ChartColumn, Download, House, List, LogOut, Plus, Settings, Tags, UserCheck, Wallet } from "lucide-react";
 import { useReminders } from "@/hooks";
 import { useReady } from "@/providers/DataProvider";
+import { TabLink } from "./tabNavigation";
 
 const GROUPS = [
   {
@@ -65,7 +66,7 @@ export function Sidebar() {
             {g.items.map(({ href, label, icon: Icon, match }) => {
               const on = isActive(match);
               return (
-                <Link
+                <TabLink
                   key={href}
                   href={href}
                   aria-current={on ? "page" : undefined}
@@ -76,7 +77,7 @@ export function Sidebar() {
                   <Icon size={20} strokeWidth={1.9} aria-hidden />
                   <span className="flex-1">{label}</span>
                   {href === "/lembretes" && unseen > 0 && <span className="badge badge-neg">{unseen}</span>}
-                </Link>
+                </TabLink>
               );
             })}
           </div>

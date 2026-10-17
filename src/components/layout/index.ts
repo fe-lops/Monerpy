@@ -4,4 +4,5 @@ export { AuthTabs } from "./AuthTabs";
 export { BottomNav } from "./BottomNav";
 export { GhostBanner } from "./GhostBanner";
 export { OverflowGuard } from "./OverflowGuard";
+export { HOME, TabBackGuard, TabLink } from "./tabNavigation";
 export { Sidebar } from "./Sidebar";
