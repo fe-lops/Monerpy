@@ -10,6 +10,17 @@ function describe(el: Element): string {
 }
 
 /**
+ * Está dentro de algo que corta o conteúdo (ex.: `truncate`, rolagem)? Então não alarga a página.
+ * html/body não contam: o `overflow-x: clip` deles é justamente a rede de segurança que esconde o problema.
+ */
+function clippedByAncestor(el: Element): boolean {
+  for (let p = el.parentElement; p && p !== document.body && p !== document.documentElement; p = p.parentElement) {
+    if (getComputedStyle(p).overflowX !== "visible") return true;
+  }
+  return false;
+}
+
+/**
  * SÓ EM DESENVOLVIMENTO: avisa no console quando algum elemento passa da largura da tela.
  * Em produção o `overflow-x: clip` (globals.css) esconde o sintoma; este alarme mostra a causa
  * para corrigi-la (em geral: grade sem colunas definidas ou texto sem quebra em flex).
@@ -25,7 +36,8 @@ export function OverflowGuard() {
         const r = el.getBoundingClientRect();
         if (r.width === 0 || r.right <= width + 1) return false;
         const pos = getComputedStyle(el).position;
-        return pos !== "fixed" && pos !== "absolute"; // camadas sobrepostas não alargam a página
+        if (pos === "fixed" || pos === "absolute") return false; // camadas sobrepostas não alargam a página
+        return !clippedByAncestor(el);
       });
       // Mostra só os mais externos (o filho de um culpado também passa da tela).
       const outer = culprits.filter((el) => !culprits.includes(el.parentElement as Element));
