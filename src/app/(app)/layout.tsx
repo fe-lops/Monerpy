@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { BottomNav, GhostBanner, Sidebar } from "@/components/layout";
+import { BottomNav, GhostBanner, Sidebar, TabBackGuard } from "@/components/layout";
 import { useData } from "@/providers/DataProvider";
 import { Screen, Spinner } from "@/components/ui";
 
@@ -50,6 +50,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div className={`lg:pl-64 ${showBottomNav ? "pb-[96px] lg:pb-0" : ""}`}>
       <Sidebar />
       <GhostBanner />
+      <TabBackGuard />
       {children}
       {showBottomNav && <BottomNav />}
     </div>

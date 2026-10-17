@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Ellipsis, House, List, Plus, Wallet } from "lucide-react";
+import { TabLink } from "./tabNavigation";
 
 const ITEMS = [
   { href: "/dashboard", label: "Início", icon: House, match: ["/dashboard"] },
@@ -18,7 +19,7 @@ export function BottomNav() {
     const Icon = i.icon;
     const on = active(i.match);
     return (
-      <Link
+      <TabLink
         key={i.href}
         href={i.href}
         aria-current={on ? "page" : undefined}
@@ -26,7 +27,7 @@ export function BottomNav() {
       >
         <Icon size={24} strokeWidth={1.9} aria-hidden />
         <span className="whitespace-nowrap">{i.label}</span>
-      </Link>
+      </TabLink>
     );
   };
   return (
