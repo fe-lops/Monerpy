@@ -66,6 +66,10 @@ não conhece React nem Supabase.
   - Linhas de itens iguais com texto (rótulos de gráfico) usam `equalColumns(n)` de `components/charts/scale.ts`.
   - Rede de segurança em `globals.css`: `overflow-x: clip` em `html/body` e `min-width: 0` nos filhos de `.grid`.
   - Em desenvolvimento, `OverflowGuard` avisa no console (`[layout] …`) qual elemento passou da tela.
+- **Navegação entre abas** (`components/layout/tabNavigation.tsx`): barra inferior e lateral usam `TabLink`.
+  O histórico fica "Início → aba atual" (aba a partir de aba substitui), e o "voltar" de uma aba leva ao
+  Início. A entrada aberta por uma aba recebe uma marca no `history.state`; `TabBackGuard` cobre os casos
+  restantes. Links dentro das telas (ex.: Mais → Categorias) usam `Link` normal: "voltar" volta para a tela.
 - **Idempotência**: lançamentos e parcelamentos recebem `id` gerado no cliente; reenviar não duplica.
 - **Segredos só no servidor**: variáveis sem `NEXT_PUBLIC_` (ex.: `SUPABASE_SERVICE_ROLE_KEY`, `SMTP_PASS`)
   são lidas apenas em `lib/server/config.ts`. Administradores são definidos no banco (`profiles.is_admin`),
@@ -79,6 +83,7 @@ não conhece React nem Supabase.
 | Nova regra de cálculo | `lib/domain/finance.ts` + teste em `finance.test.ts` |
 | Novo campo em lançamento | `lib/domain/types.ts`, `schemas.ts`, `lib/data/*`, nova migration em `supabase/migrations/`, `TransactionForm.tsx` |
 | Nova tela | `src/app/(app)/<rota>/page.tsx`; item de menu em `components/layout/Sidebar.tsx` e/ou `BottomNav.tsx` |
+| Ícone de categoria | `components/transactions/categoryIcons.ts` (nome → ícone Lucide; sem mapa = ícone genérico) |
 | Novo componente visual genérico | `components/ui/<Nome>.tsx` + export em `components/ui/index.ts` |
 | Mudar cores/tema | tokens em `src/app/globals.css` |
 

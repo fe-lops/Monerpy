@@ -8,6 +8,23 @@ for `0.x`, o app está em desenvolvimento e mudanças de comportamento podem aco
 
 ## [Não lançado]
 
+## [0.7.1] — 2026-10-17
+
+### Adicionado
+- Categoria **Outros** (Entrada e Saída), pré-selecionada em todo lançamento novo. Migration
+  `20261018000000_outros_category.sql` cria a categoria nas contas existentes.
+- **Escolha de categoria em janela**: botões enfileirados com ícone de cada categoria, em uma janela menor
+  sobre o Novo lançamento (fundo escurecido, rolagem). Ícones também na tela Categorias.
+
+### Alterado
+- **"Voltar" a partir de uma aba leva ao Início** (em vez de refazer o caminho entre abas). Telas internas
+  mantêm o "voltar" normal; fechar uma janela com o "voltar" não muda de página.
+- Saldo e projeção **negativos em vermelho** no cartão do Início.
+
+### Corrigido
+- "A definir" aparecia nas formas de pagamento ao escolher Crédito com *Parcelar ou repetir* ou *Fixa mensal*.
+- Alarme de layout (OverflowGuard) acusava textos já cortados com "…" como transbordo.
+
 ## [0.7.0] — 2026-10-17
 
 ### Alterado
@@ -120,7 +137,8 @@ for `0.x`, o app está em desenvolvimento e mudanças de comportamento podem aco
   exportação CSV e configurações.
 - Regras financeiras do PRD com testes; camada de dados local e Supabase (RLS).
 
-[Não lançado]: https://github.com/fe-lops/Monerpy/compare/v0.7.0...HEAD
+[Não lançado]: https://github.com/fe-lops/Monerpy/compare/v0.7.1...HEAD
+[0.7.1]: https://github.com/fe-lops/Monerpy/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/fe-lops/Monerpy/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/fe-lops/Monerpy/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/fe-lops/Monerpy/compare/v0.4.1...v0.5.0

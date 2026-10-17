@@ -42,6 +42,7 @@ Rode cada arquivo de `supabase/migrations/`, em ordem, no **SQL Editor** do Supa
 | `20261015000000_init.sql` | 0.1 | Tabelas, RLS, categorias iniciais, parcelamento |
 | `20261016000000_registration_requests.sql` | 0.4 | Pedidos de registro e administradores |
 | `20261017000000_credit_groups_and_categories.sql` | 0.6 | Crédito: parcelar/repetir com periodicidade e fixa mensal; nova lista de categorias |
+| `20261018000000_outros_category.sql` | 0.7.1 | Categoria "Outros" (Entrada e Saída) para todas as contas |
 
 ## Usuário fantasma (demonstração)
 
