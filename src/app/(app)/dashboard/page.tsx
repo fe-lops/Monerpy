@@ -69,9 +69,10 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3 lg:gap-6">
         <section className="flex flex-col justify-center gap-1 rounded-xl bg-accent px-4 py-5 text-center text-on-accent lg:items-start lg:px-6 lg:text-left" aria-label="Saldo">
           <span>Saldo total disponível</span>
-          <span className="num font-display text-[36px] font-bold leading-[44px] tracking-[-0.01em]">{brl(balance)}</span>
+          {/* Negativo em vermelho (tom próprio para o fundo verde-limão). */}
+          <span className={`num font-display text-[36px] font-bold leading-[44px] tracking-[-0.01em] ${balance < 0 ? "text-[var(--neg-on-accent)]" : ""}`}>{brl(balance)}</span>
           <span className="text-[13px] leading-[18px] opacity-80">
-            Projeção estimada: <span className="num font-semibold">{brl(projection)}</span>
+            Projeção estimada: <span className={`num font-semibold ${projection < 0 ? "text-[var(--neg-on-accent)]" : ""}`}>{brl(projection)}</span>
           </span>
         </section>
 
