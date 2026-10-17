@@ -8,6 +8,12 @@ for `0.x`, o app está em desenvolvimento e mudanças de comportamento podem aco
 
 ## [Não lançado]
 
+## [0.7.2] — 2026-10-17
+
+### Corrigido
+- Com saldo negativo, o **cartão inteiro** do saldo no Início fica vermelho (texto branco), em vez de só o número.
+- Rótulos do eixo do gráfico (ex.: "7,5 mil") quebravam em duas linhas no celular.
+
 ## [0.7.1] — 2026-10-17
 
 ### Adicionado
@@ -137,7 +143,8 @@ for `0.x`, o app está em desenvolvimento e mudanças de comportamento podem aco
   exportação CSV e configurações.
 - Regras financeiras do PRD com testes; camada de dados local e Supabase (RLS).
 
-[Não lançado]: https://github.com/fe-lops/Monerpy/compare/v0.7.1...HEAD
+[Não lançado]: https://github.com/fe-lops/Monerpy/compare/v0.7.2...HEAD
+[0.7.2]: https://github.com/fe-lops/Monerpy/compare/v0.7.1...v0.7.2
 [0.7.1]: https://github.com/fe-lops/Monerpy/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/fe-lops/Monerpy/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/fe-lops/Monerpy/compare/v0.5.0...v0.6.0
