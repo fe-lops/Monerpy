@@ -34,8 +34,8 @@ A segurança dos dados é garantida pelo **RLS do PostgreSQL**, não pelo fronte
 | `src/lib/domain/recurrence.ts` | Crédito: periodicidade, parcelar/repetir (total ou por cobrança) e fixa mensal (gera até 2 meses à frente; o `DataProvider` completa as que faltam a cada carregamento). | `lib/domain` |
 | `src/lib/ghost.ts` | Modo visitante (`/ghost-test-user`): cookie de sessão que faz `getRepo()` usar `LocalRepo` em memória com `demoDB()`. | — |
 | `src/lib/data/` | Acesso a dados. `repo.ts` define o contrato; `local.ts` e `supabase.ts` o implementam. | `lib/domain`, `lib/env` |
-| `src/lib/server/` | **Somente servidor** (`import "server-only"`): cliente Supabase com a chave `service_role`, envio de e-mail SMTP, modelos de e-mail e `requireAdmin`. Nunca importe em componente do navegador. | `lib/domain`, `lib/env` |
-| `src/app/api/` | Rotas do servidor: `POST /api/registro` (pedido público) e `/api/admin/registros` (somente administradores, via `Authorization: Bearer`). | `lib/server`, `lib/domain` |
+| `src/lib/server/` | **Somente servidor** (`import "server-only"`): cliente Supabase com a chave `service_role`, envio de e-mail SMTP, modelos de e-mail, `requireUser` e `requireAdmin`. Nunca importe em componente do navegador. | `lib/domain`, `lib/env` |
+| `src/app/api/` | Rotas do servidor: `POST /api/registro` (pedido público), `/api/admin/registros` (somente administradores) e `DELETE /api/conta` (exclui a conta de quem está logado), as duas últimas via `Authorization: Bearer`. | `lib/server`, `lib/domain` |
 | `src/lib/env.ts` | Leitura e validação das variáveis `NEXT_PUBLIC_SUPABASE_*`. | — |
 | `src/middleware.ts` | Renova a sessão e protege rotas quando o Supabase está configurado. | `lib/env` |
 | `supabase/migrations/` | Esquema SQL versionado: tabelas, constraints, RLS, gatilhos e funções. | — |
@@ -43,6 +43,10 @@ A segurança dos dados é garantida pelo **RLS do PostgreSQL**, não pelo fronte
 Fluxo do registro com aprovação: `/registro` → `POST /api/registro` (grava em `registration_requests`)
 → administrador em `/admin/registros` → `POST /api/admin/registros/:id` → aprovar: cria a conta e envia link
 `/definir-senha?token_hash=…`; recusar: envia e-mail de recusa.
+
+Exclusão de conta: Configurações → *Excluir minha conta* (marcar "Li e estou ciente" + digitar CONFIRMAR)
+→ `DELETE /api/conta` → `auth.admin.deleteUser` apaga em cascata todos os dados (`on delete cascade`) e o
+pedido de registro do e-mail é removido (a pessoa pode pedir acesso de novo) → página `/conta-excluida`.
 
 Regra de ouro: **dependências apontam para baixo** (`app → components → providers → lib`). `lib/domain`
 não conhece React nem Supabase.

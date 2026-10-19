@@ -8,6 +8,25 @@ for `0.x`, o app está em desenvolvimento e mudanças de comportamento podem aco
 
 ## [Não lançado]
 
+## [0.7.9] — 2026-10-19
+
+### Adicionado
+- **Sugestões de descrição** no Novo lançamento: ao digitar (2 letras ou mais), aparecem lançamentos anteriores
+  do mesmo tipo com nome parecido. Tocar em um repete os atributos (valor, categoria, contexto, forma de
+  pagamento, situação e crédito parcelado/fixo), com as datas trazidas para o mês atual. Tocar fora descarta.
+- **Aviso de saldo zerado**: ao salvar uma Saída que deixa o saldo total zerado ou negativo (qualquer forma de
+  pagamento), uma janela mostra saldo total, despesa e saldo previsto (negativos em vermelho) e pede
+  confirmação. *Cancelar* volta ao formulário sem perder o que foi digitado.
+- **Excluir minha conta** em Configurações: confirmação com "Li e estou ciente" e a palavra CONFIRMAR (o botão
+  fica cinza até lá e vermelho quando liberado). Apaga a conta e todos os dados e leva a uma página de despedida.
+  Rota `DELETE /api/conta`.
+- Usuário fantasma: contas que se repetem mês a mês ("Conta de água Cesan", "Conta de luz") para demonstrar as sugestões.
+
+### Corrigido
+- "Mais" na barra lateral do computador (só existia no celular).
+- "A definir" sumia da forma de pagamento/recebimento ao escolher Crédito → Parcelar ou Fixa mensal, ou com o
+  lançamento marcado como pago. Agora fica sempre disponível; escolhê-la torna o lançamento pendente.
+
 ## [0.7.8] — 2026-10-19
 
 ### Corrigido
