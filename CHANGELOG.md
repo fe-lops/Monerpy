@@ -8,6 +8,13 @@ for `0.x`, o app está em desenvolvimento e mudanças de comportamento podem aco
 
 ## [Não lançado]
 
+## [0.7.8] — 2026-10-19
+
+### Corrigido
+- A aba do navegador e a abertura do app no celular ainda mostravam o **ícone antigo da Vercel**: os
+  navegadores guardavam o ícone pelo endereço. Todos os ícones passam a ter endereço versionado (`?v=2`)
+  e o ícone do iPhone (`apple-touch-icon`), que não estava sendo declarado, foi incluído.
+
 ## [0.7.7] — 2026-10-19
 
 ### Adicionado
