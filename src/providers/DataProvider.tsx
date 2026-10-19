@@ -34,6 +34,8 @@ interface DataCtx extends Partial<Snapshot> {
 
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  /** Exclui a conta e os dados. Depois disso a tela deve recarregar (ex.: ir para /conta-excluida). */
+  deleteAccount: () => Promise<void>;
   reload: () => Promise<unknown>;
 
   /** `id` gerado uma vez por formulário: reenviar não duplica. */
@@ -176,6 +178,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       setSnap(null);
       setSession(null);
       setStatus("anon");
+    },
+    deleteAccount: async () => {
+      await repo.deleteAccount();
+      if (repo.mode === "ghost") leaveGhostMode();
     },
     reload: load,
 

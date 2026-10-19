@@ -231,6 +231,13 @@ export class LocalRepo implements Repo {
     });
   }
 
+  /** Local: apaga o banco e a sessão deste navegador. Visitante: nada a apagar (tudo na memória). */
+  async deleteAccount() {
+    if (this.mode !== "local") return;
+    localStorage.removeItem(DB_KEY);
+    localStorage.removeItem(SESSION_KEY);
+  }
+
   async resetAll() {
     this.store.write(this.mode === "ghost" ? demoDB("Visitante") : freshDB());
   }

@@ -57,6 +57,9 @@ export interface Repo {
 
   setReminderStatus(transactionId: string, remindAt: string, status: ReminderStatus): Promise<Reminder>;
 
+  /** Exclui a conta e todos os dados dela (Configurações → Excluir minha conta). Encerra a sessão. */
+  deleteAccount(): Promise<void>;
+
   /** Apaga todos os dados do usuário (modo local) — usado em "Apagar dados". */
   resetAll?(): Promise<void>;
 }

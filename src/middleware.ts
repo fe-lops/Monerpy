@@ -4,7 +4,7 @@ import { isSupabaseConfigured, SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/env
 import { GHOST_COOKIE } from "@/lib/ghost";
 
 // Rotas acessíveis sem login. As rotas /api validam a sessão por conta própria.
-const PUBLIC = ["/login", "/registro", "/recuperar-senha", "/redefinir-senha", "/definir-senha", "/ghost-test-user", "/api/"];
+const PUBLIC = ["/login", "/registro", "/recuperar-senha", "/redefinir-senha", "/definir-senha", "/ghost-test-user", "/conta-excluida", "/api/"];
 
 /**
  * Com o Supabase configurado: renova a sessão (cookies) e bloqueia rotas da área

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { UserX } from "lucide-react";
 import { useReady } from "@/providers/DataProvider";
 import { useToast } from "@/providers/ToastProvider";
 import { Field, MoneyInput, PageHeader, Screen, Seg, Sheet } from "@/components/ui";
@@ -16,7 +17,94 @@ const TIMEZONES: [string, string][] = [
   ["America/Noronha", "Fernando de Noronha"],
 ];
 
-function useTheme(): ["dark" | "light", (t: "dark" | "light") => void] {
+/** Palavra que a pessoa digita para liberar a exclusão (maiúsculas ou minúsculas). */
+const CONFIRM_WORD = "CONFIRMAR";
+
+/**
+ * Confirmação em duas etapas: marcar "Li e estou ciente" mostra o campo para digitar CONFIRMAR;
+ * só então o botão fica vermelho e ativo. Ao excluir, vai para a página de despedida.
+ */
+function DeleteAccountDialog({ open, onClose, onConfirm }: { open: boolean; onClose: () => void; onConfirm: () => Promise<void> }) {
+  const [aware, setAware] = useState(false);
+  const [typed, setTyped] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const ready = aware && typed.trim().toUpperCase() === CONFIRM_WORD;
+
+  function close() {
+    if (busy) return;
+    setAware(false);
+    setTyped("");
+    setError(null);
+    onClose();
+  }
+
+  async function confirm() {
+    if (!ready || busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await onConfirm();
+      window.location.replace("/conta-excluida"); // recarrega: sessão e dados em memória somem
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Não foi possível excluir a conta.");
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Sheet open={open} onClose={close} title="Excluir a sua conta?" alert>
+      <p className="text-ink-2">
+        Todos os seus dados — movimentações, categorias, cobranças, lembretes e dados de perfil — serão excluídos do Monerpy, e você sairá de todos os aparelhos.
+        Você poderá pedir uma conta nova quando quiser.
+      </p>
+      <label className="flex cursor-pointer items-center gap-3 font-semibold">
+        <input
+          type="checkbox"
+          className="size-5 flex-none accent-[var(--expense-solid)]"
+          checked={aware}
+          onChange={(e) => {
+            setAware(e.target.checked);
+            if (!e.target.checked) setTyped("");
+          }}
+        />
+        Li e estou ciente
+      </label>
+      {aware && (
+        <Field label={`Para confirmar, digite ${CONFIRM_WORD}`}>
+          {(id) => (
+            <input
+              id={id}
+              className="field"
+              value={typed}
+              onChange={(e) => setTyped(e.target.value)}
+              placeholder={CONFIRM_WORD}
+              autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck={false}
+              autoFocus
+            />
+          )}
+        </Field>
+      )}
+      {error && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
+      <div className="flex gap-3">
+        <button type="button" className="btn-ghost h-12 flex-1" onClick={close} disabled={busy}>
+          Cancelar
+        </button>
+        <button type="button" className="cta cta-danger h-12 flex-[1.4] text-base" disabled={!ready || busy} onClick={confirm}>
+          {busy ? "Excluindo…" : "Excluir minha conta"}
+        </button>
+      </div>
+    </Sheet>
+  );
+}
+
+function useTheme():["dark" | "light", (t: "dark" | "light") => void] {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   useEffect(() => {
     setTheme(document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark");
@@ -34,7 +122,7 @@ function useTheme(): ["dark" | "light", (t: "dark" | "light") => void] {
 }
 
 export default function ConfiguracoesPage() {
-  const { profile, today, repo, updateProfile, signOut, resetAll, seedDemo, balance } = useReady();
+  const { profile, today, repo, updateProfile, signOut, deleteAccount, resetAll, seedDemo, balance } = useReady();
   const toast = useToast();
   const router = useRouter();
   const [theme, setTheme] = useTheme();
@@ -51,6 +139,7 @@ export default function ConfiguracoesPage() {
   const [pw, setPw] = useState({ password: "", confirm: "" });
   const [pwErr, setPwErr] = useState<Record<string, string>>({});
   const [resetOpen, setResetOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   async function saveProfile(e: React.FormEvent) {
     e.preventDefault();
@@ -176,6 +265,20 @@ export default function ConfiguracoesPage() {
           <p className="cap">Modo local: os dados ficam só neste navegador. Configure o Supabase para ter login, backup e acesso de outros aparelhos.</p>
         )}
       </section>
+
+      <section className="flex flex-col gap-3 border-t border-line pt-6">
+        <h2 className="sub">Excluir conta</h2>
+        <p className="cap">
+          {repo.mode === "ghost"
+            ? "Modo visitante: nada é apagado de verdade; a exclusão só encerra a visita."
+            : "Apaga a sua conta e todos os seus dados do Monerpy. Não dá para desfazer."}
+        </p>
+        <button type="button" className="cta cta-danger" onClick={() => setDeleteOpen(true)}>
+          <UserX size={20} aria-hidden /> Excluir minha conta
+        </button>
+      </section>
+
+      <DeleteAccountDialog open={deleteOpen} onClose={() => setDeleteOpen(false)} onConfirm={deleteAccount} />
 
       <Sheet open={pwOpen} onClose={() => setPwOpen(false)} title="Alterar senha">
         <Field label="Nova senha" error={pwErr.password}>

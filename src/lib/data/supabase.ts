@@ -121,6 +121,14 @@ export class SupabaseRepo implements Repo {
     const { error } = await this.sb.auth.resetPasswordForEmail(email, { redirectTo });
     fail(error);
   }
+  async deleteAccount() {
+    const token = await this.getAccessToken();
+    const res = await fetch("/api/conta", { method: "DELETE", headers: { Authorization: `Bearer ${token ?? ""}` } });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.error ?? "Não foi possível excluir a conta.");
+    // O usuário já não existe no servidor: limpa só a sessão guardada neste navegador.
+    await this.sb.auth.signOut({ scope: "local" });
+  }
   async getAccessToken() {
     const { data } = await this.sb.auth.getSession();
     return data.session?.access_token ?? null;
