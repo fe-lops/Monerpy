@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Bell, ChartColumn, Download, House, List, LogOut, Plus, Settings, Tags, UserCheck, Wallet } from "lucide-react";
 import { useReminders } from "@/hooks";
+import { Brand } from "@/components/ui/Logo";
 import { useReady } from "@/providers/DataProvider";
 import { TabLink } from "./tabNavigation";
 
@@ -50,9 +51,8 @@ export function Sidebar() {
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col gap-6 border-r border-line bg-[var(--bg-nav)] px-4 py-6 lg:flex" aria-label="Navegação principal">
-      <Link href="/dashboard" className="flex items-center gap-2 px-2 font-display text-[22px] font-extrabold leading-7 tracking-[-0.01em]">
-        <i className="inline-block size-2.5 rounded-full bg-accent" />
-        Monerpy
+      <Link href="/dashboard" className="px-2" aria-label="Monerpy — Início">
+        <Brand height={34} priority />
       </Link>
 
       <Link href="/movimentacoes/nova?tipo=saida" className="cta h-12 text-base" aria-current={path.startsWith("/movimentacoes/nova") ? "page" : undefined}>

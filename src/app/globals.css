@@ -97,6 +97,17 @@ body {
   outline: 2px solid var(--accent-ink);
   outline-offset: 2px;
 }
+/* Logo: versão de cada tema (componente <Logo>). Escuro é o padrão. */
+.logo-on-light {
+  display: none;
+}
+:root[data-theme="light"] .logo-on-light {
+  display: block;
+}
+:root[data-theme="light"] .logo-on-dark {
+  display: none;
+}
+
 .num {
   font-variant-numeric: tabular-nums;
 }

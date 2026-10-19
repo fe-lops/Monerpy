@@ -7,7 +7,7 @@ import { BarChart } from "@/components/charts";
 import { useMonthPeriod, useReminders } from "@/hooks";
 import { useReady } from "@/providers/DataProvider";
 import { PendingRow, TxRow, useSettleFlow } from "@/components/transactions";
-import { Empty, Screen, ScopeSeg } from "@/components/ui";
+import { Empty, Screen, ScopeSeg, Logo } from "@/components/ui";
 import { addDays } from "@/lib/domain/dates";
 import { cashProjection, displayDate, expensesByCategory, inScope, pendingDate, pendingTotals, realizedInPeriod } from "@/lib/domain/finance";
 import { brl } from "@/lib/domain/money";
@@ -50,9 +50,13 @@ export default function DashboardPage() {
   return (
     <Screen size="wide">
       <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <p className="cap">{profile.display_name ? `Olá, ${profile.display_name}` : "Olá"}</p>
-          <h1 className="title">Início</h1>
+        <div className="flex min-w-0 items-center gap-3">
+          {/* No computador a logo já aparece na barra lateral. */}
+          <Logo height={44} priority className="lg:hidden" />
+          <div className="min-w-0">
+            <p className="cap">{profile.display_name ? `Olá, ${profile.display_name}` : "Olá"}</p>
+            <h1 className="title">Início</h1>
+          </div>
         </div>
         <div className="flex items-center gap-3">
           <div className="hidden w-[380px] lg:block">

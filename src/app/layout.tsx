@@ -12,6 +12,14 @@ export const metadata: Metadata = {
   title: "Monerpy",
   description: "Controle de caixa pessoal e profissional para microempreendedores.",
   applicationName: "Monerpy",
+  // Ícone da aba: versão de acordo com o tema do navegador. Além destes, o Next inclui sozinho
+  // src/app/favicon.ico (fallback) e src/app/apple-icon.png (iPhone).
+  icons: {
+    icon: [
+      { url: "/brand/favicon-light.png", type: "image/png", sizes: "96x96", media: "(prefers-color-scheme: light)" },
+      { url: "/brand/favicon-dark.png", type: "image/png", sizes: "96x96", media: "(prefers-color-scheme: dark)" },
+    ],
+  },
 };
 
 export const viewport: Viewport = {

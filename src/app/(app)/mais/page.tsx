@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Bell, ChartColumn, ChevronRight, Download, Settings, Tags, UserCheck } from "lucide-react";
 import { useReminders } from "@/hooks";
 import { useReady } from "@/providers/DataProvider";
-import { PageHeader, Screen } from "@/components/ui";
+import { PageHeader, Screen, Logo } from "@/components/ui";
 
 const ITEMS = [
   { href: "/lembretes", icon: Bell, name: "Lembretes", sub: "Vencimentos próximos e atrasados" },
@@ -56,7 +56,9 @@ export default function MaisPage() {
           </li>
         ))}
       </ul>
-      <p className="text-center text-xs text-ink-2">Monerpy v{process.env.NEXT_PUBLIC_APP_VERSION}</p>
+      <p className="flex items-center justify-center gap-2 text-xs text-ink-2">
+        <Logo height={20} /> Monerpy v{process.env.NEXT_PUBLIC_APP_VERSION}
+      </p>
     </Screen>
   );
 }
