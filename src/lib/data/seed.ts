@@ -77,7 +77,8 @@ export const DEFAULT_CATEGORIES: { name: string; transaction_type: TxType; defau
 /**
  * Conjunto de exemplo com todas as funcionalidades: histórico para os gráficos, pendências
  * (atrasada, hoje, futuras, sem data), crédito não recorrente, parcelado mensal e semanal,
- * entrada parcelada e cobranças fixas mensais.
+ * entrada parcelada e cobranças fixas mensais, e contas repetidas mês a mês (sugestões de descrição).
+ * O aviso de saldo zerado aparece ao lançar uma saída maior que o saldo total do exemplo.
  */
 export function buildDemoData(categories: Category[], today: string, makeId: () => string): { transactions: Transaction[]; groups: InstallmentGroup[] } {
   const cat = (name: string) => categories.find((c) => c.name === name)?.id ?? null;
@@ -139,11 +140,15 @@ export function buildDemoData(categories: Category[], today: string, makeId: () 
     settled("EXPENSE", "PERSONAL", "Delivery", "Delivery & Apps de Comida", 5200, 40, "CREDIT_CARD"),
     settled("EXPENSE", "PERSONAL", "Aluguel", "Aluguel & Condomínio", 90000, 63, "PIX"),
     settled("EXPENSE", "PERSONAL", "Supermercado do mês", "Supermercado & Feira", 29870, 64, "DEBIT_CARD"),
+    // Contas que se repetem todo mês: digitar "Conta" no Novo lançamento sugere estas (v0.7.9)
+    settled("EXPENSE", "PERSONAL", "Conta de água Cesan", "Contas de Consumo", 8210, 32, "PIX"),
+    settled("EXPENSE", "PERSONAL", "Conta de água Cesan", "Contas de Consumo", 7980, 62, "PIX"),
+    settled("EXPENSE", "PERSONAL", "Conta de luz", "Contas de Consumo", 14250, 37, "PIX"),
     // Pendências
     pending("INCOME", "BUSINESS", "Atendimento — Beatriz", "Freelance / Serviços Prestados", 20000, 2),
     pending("INCOME", "BUSINESS", "Atendimento — Fernanda", "Freelance / Serviços Prestados", 18000, 6),
     pending("INCOME", "BUSINESS", "Atendimento — Marina", "Freelance / Serviços Prestados", 15000, null),
-    pending("EXPENSE", "PERSONAL", "Conta de água", "Contas de Consumo", 8540, -2),
+    pending("EXPENSE", "PERSONAL", "Conta de água Cesan", "Contas de Consumo", 8540, -2),
     pending("EXPENSE", "PERSONAL", "IPVA (cota única)", "IPVA, Licenciamento & Seguros", 21000, 0),
     pending("EXPENSE", "BUSINESS", "Curso de colorimetria", "Cursos & Certificações", 27000, 10),
   ];
