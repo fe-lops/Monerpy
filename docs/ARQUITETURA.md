@@ -94,10 +94,13 @@ não conhece React nem Supabase.
   (~1 MB cada): **não** são usados diretamente pelo app.
 - **Gerados** por `python scripts/brand/gerar_marca.py` (Pillow + Microsoft Edge headless):
   `src/assets/brand/logo-on-{dark,light}.webp` (componente `<Logo>`/`<Brand>` em `components/ui/Logo.tsx`),
-  `public/brand/favicon-{light,dark}.png` (aba, por tema do navegador), `src/app/favicon.ico` (fallback),
-  `src/app/apple-icon.png` (iPhone) e `public/brand/icon-{192,512}.png` (Android/manifesto).
+  `public/brand/favicon-{light,dark}.png` (aba, por tema do navegador), `public/favicon.ico` (fallback),
+  `public/brand/apple-icon.png` (iPhone) e `public/brand/icon-{192,512}.png` (Android/manifesto).
+- Todos são declarados em `app/layout.tsx` (metadata.icons) e `app/manifest.ts` com endereço versionado
+  (`brandIcon()` em `lib/brandIcons.ts` → `?v=N`), porque navegadores e atalhos instalados guardam ícones
+  pelo endereço e não os baixam de novo.
 - O tema do app escolhe a versão por CSS (`.logo-on-dark` / `.logo-on-light` em `globals.css`).
-- Para trocar a logo: substitua os SVGs em `design/brand/` e rode o script.
+- Para trocar a logo: substitua os SVGs em `design/brand/`, rode o script e **aumente `ICON_VERSION`**.
 
 ## Usuário fantasma
 

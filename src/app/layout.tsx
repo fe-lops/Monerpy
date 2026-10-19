@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Inter } from "next/font/google";
 import { OverflowGuard } from "@/components/layout/OverflowGuard";
+import { brandIcon } from "@/lib/brandIcons";
 import { DataProvider } from "@/providers/DataProvider";
 import { ToastProvider } from "@/providers/ToastProvider";
 import "./globals.css";
@@ -12,15 +13,17 @@ export const metadata: Metadata = {
   title: "Monerpy",
   description: "Controle de caixa pessoal e profissional para microempreendedores.",
   applicationName: "Monerpy",
-  // Ícone da aba: versão de acordo com o tema do navegador. Além destes, o Next inclui sozinho
-  // src/app/favicon.ico (fallback) e src/app/apple-icon.png (iPhone).
+  // Ícone da aba de acordo com o tema do navegador, favicon.ico de reserva e ícone do iPhone.
+  // Endereços versionados (brandIcon) para furar o cache de ícones antigos.
   icons: {
     icon: [
-      { url: "/brand/favicon-light.png", type: "image/png", sizes: "96x96", media: "(prefers-color-scheme: light)" },
-      { url: "/brand/favicon-dark.png", type: "image/png", sizes: "96x96", media: "(prefers-color-scheme: dark)" },
+      { url: brandIcon("/brand/favicon-light.png"), type: "image/png", sizes: "96x96", media: "(prefers-color-scheme: light)" },
+      { url: brandIcon("/brand/favicon-dark.png"), type: "image/png", sizes: "96x96", media: "(prefers-color-scheme: dark)" },
+      { url: brandIcon("/favicon.ico"), sizes: "48x48" },
     ],
-  },
-};
+    shortcut: brandIcon("/favicon.ico"),
+    apple: { url: brandIcon("/brand/apple-icon.png"), sizes: "180x180", type: "image/png" },
+  },};
 
 export const viewport: Viewport = {
   width: "device-width",

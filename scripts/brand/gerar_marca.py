@@ -93,11 +93,11 @@ def main() -> None:
         square(img, 96, 0.98).save(p, optimize=True)
         written.append(p)
     # favicon.ico: fallback para navegadores sem suporte a `media` nos ícones.
-    p = out("src", "app", "favicon.ico")
+    p = out("public", "favicon.ico")
     square(on_light, 256, 0.98).save(p, sizes=[(16, 16), (32, 32), (48, 48)])
     written.append(p)
     # iPhone (sem transparência) e Android/manifesto (0.66 = dentro da área segura "maskable").
-    p = out("src", "app", "apple-icon.png")
+    p = out("public", "brand", "apple-icon.png")
     square(on_dark, 180, 0.78, APP_BG).convert("RGB").save(p, optimize=True)
     written.append(p)
     for size in (192, 512):
@@ -107,6 +107,7 @@ def main() -> None:
 
     for p in written:
         print(f"{os.path.getsize(p) // 1024:>4} KB  {os.path.relpath(p, ROOT)}")
+    print("Lembre-se: aumente ICON_VERSION em src/lib/brandIcons.ts para furar o cache dos ícones antigos.")
 
 
 if __name__ == "__main__":

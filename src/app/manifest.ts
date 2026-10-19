@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { brandIcon } from "@/lib/brandIcons";
 
 /**
  * Manifesto do app (atalho "Adicionar à tela inicial" no celular).
@@ -16,9 +17,9 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#0f172a",
     lang: "pt-BR",
     icons: [
-      { src: "/brand/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
-      { src: "/brand/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
-      { src: "/brand/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+      { src: brandIcon("/brand/icon-192.png"), sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: brandIcon("/brand/icon-512.png"), sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: brandIcon("/brand/icon-512.png"), sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
   };
 }
