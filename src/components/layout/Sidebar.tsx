@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, ChartColumn, Download, House, List, LogOut, Plus, Settings, Tags, UserCheck, Wallet } from "lucide-react";
+import { Bell, ChartColumn, Download, Ellipsis, House, List, LogOut, Plus, Settings, Tags, UserCheck, Wallet } from "lucide-react";
 import { useReminders } from "@/hooks";
 import { Brand } from "@/components/ui/Logo";
 import { useReady } from "@/providers/DataProvider";
@@ -24,7 +24,8 @@ const GROUPS = [
       { href: "/relatorios", label: "Relatórios", icon: ChartColumn, match: ["/relatorios"] },
       { href: "/categorias", label: "Categorias", icon: Tags, match: ["/categorias"] },
       { href: "/exportar", label: "Exportar CSV", icon: Download, match: ["/exportar"] },
-      { href: "/configuracoes", label: "Configurações", icon: Settings, match: ["/configuracoes", "/mais"] },
+      { href: "/configuracoes", label: "Configurações", icon: Settings, match: ["/configuracoes"] },
+      { href: "/mais", label: "Mais", icon: Ellipsis, match: ["/mais"] },
     ],
   },
 ];
