@@ -87,6 +87,18 @@ não conhece React nem Supabase.
 | Novo componente visual genérico | `components/ui/<Nome>.tsx` + export em `components/ui/index.ts` |
 | Mudar cores/tema | tokens em `src/app/globals.css` |
 
+## Marca (logo e ícones)
+
+- **Originais:** `design/brand/logo-modo-claro.svg` (sombra escura, para fundo claro) e
+  `logo-modo-escuro.svg` (sombra clara, para fundo escuro). São exportações do Canva com PNG embutido
+  (~1 MB cada): **não** são usados diretamente pelo app.
+- **Gerados** por `python scripts/brand/gerar_marca.py` (Pillow + Microsoft Edge headless):
+  `src/assets/brand/logo-on-{dark,light}.webp` (componente `<Logo>`/`<Brand>` em `components/ui/Logo.tsx`),
+  `public/brand/favicon-{light,dark}.png` (aba, por tema do navegador), `src/app/favicon.ico` (fallback),
+  `src/app/apple-icon.png` (iPhone) e `public/brand/icon-{192,512}.png` (Android/manifesto).
+- O tema do app escolhe a versão por CSS (`.logo-on-dark` / `.logo-on-light` em `globals.css`).
+- Para trocar a logo: substitua os SVGs em `design/brand/` e rode o script.
+
 ## Usuário fantasma
 
 `/ghost-test-user` liga o modo visitante: `LocalRepo(memoryStore(demoDB))`, sem tocar no Supabase (o middleware

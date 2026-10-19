@@ -8,6 +8,16 @@ for `0.x`, o app está em desenvolvimento e mudanças de comportamento podem aco
 
 ## [Não lançado]
 
+## [0.7.7] — 2026-10-19
+
+### Adicionado
+- **Logo da Monerpy** no app: telas de login/registro, barra lateral (computador), topo do Início (celular) e
+  rodapé do Mais. Versão de cada tema (sombra clara no escuro, escura no claro), trocada por CSS.
+- **Ícone da aba do navegador** com a logo (substitui o ícone padrão do Next/Vercel), de acordo com o tema do
+  navegador; ícone para "Adicionar à tela inicial" no iPhone e no Android (manifesto).
+- SVGs originais em `design/brand/` e script `scripts/brand/gerar_marca.py` que gera os arquivos otimizados
+  (~46 KB cada, contra ~1 MB dos SVGs).
+
 ## [0.7.2] — 2026-10-17
 
 ### Corrigido
@@ -143,7 +153,8 @@ for `0.x`, o app está em desenvolvimento e mudanças de comportamento podem aco
   exportação CSV e configurações.
 - Regras financeiras do PRD com testes; camada de dados local e Supabase (RLS).
 
-[Não lançado]: https://github.com/fe-lops/Monerpy/compare/v0.7.2...HEAD
+[Não lançado]: https://github.com/fe-lops/Monerpy/compare/v0.7.7...HEAD
+[0.7.7]: https://github.com/fe-lops/Monerpy/compare/v0.7.2...v0.7.7
 [0.7.2]: https://github.com/fe-lops/Monerpy/compare/v0.7.1...v0.7.2
 [0.7.1]: https://github.com/fe-lops/Monerpy/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/fe-lops/Monerpy/compare/v0.6.0...v0.7.0

@@ -44,6 +44,11 @@ Rode cada arquivo de `supabase/migrations/`, em ordem, no **SQL Editor** do Supa
 | `20261017000000_credit_groups_and_categories.sql` | 0.6 | Crédito: parcelar/repetir com periodicidade e fixa mensal; nova lista de categorias |
 | `20261018000000_outros_category.sql` | 0.7.1 | Categoria "Outros" (Entrada e Saída) para todas as contas |
 
+## Marca
+
+Logo e ícones são gerados a partir dos SVGs em `design/brand/` com `python scripts/brand/gerar_marca.py`
+(requer Pillow e Microsoft Edge). Detalhes em `docs/ARQUITETURA.md` → Marca.
+
 ## Usuário fantasma (demonstração)
 
 `https://SUA-URL/ghost-test-user` abre o app como **visitante**, com dados de exemplo que mostram todas as
