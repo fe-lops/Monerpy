@@ -30,6 +30,12 @@ export function addMonths(iso: ISODate, n: number): ISODate {
   return toISO(ny, nm, Math.min(d, daysInMonth(ny, nm)));
 }
 
+/** O dia de `day` dentro do mês de `month`, limitado ao último dia (dia 31 em fevereiro = 28/29). */
+export function sameDayInMonth(day: ISODate, month: ISODate): ISODate {
+  const [y, m] = parts(month);
+  return toISO(y, m, Math.min(parts(day)[2], daysInMonth(y, m)));
+}
+
 export function addDays(iso: ISODate, n: number): ISODate {
   const [y, m, d] = parts(iso);
   const dt = new Date(Date.UTC(y, m - 1, d + n));

@@ -233,7 +233,8 @@ export interface HistoryFilter {
 
 export const EMPTY_FILTER: HistoryFilter = { q: "", from: "", to: "", type: "ALL", status: "ALL", scope: "ALL", categoryId: "ALL", method: "ALL" };
 
-function normalize(s: string): string {
+/** Minúsculas e sem acentos, para buscas ("Água" encontra "agua"). */
+export function normalize(s: string): string {
   return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 }
 

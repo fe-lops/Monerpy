@@ -5,25 +5,26 @@ import { useMemo, useState } from "react";
 import { Field, MoneyInput, Seg, Sheet } from "@/components/ui";
 import { newId } from "@/lib/data";
 import { findOtherCategory, selectableCategories } from "@/lib/domain/categories";
-import { addMonths, dmy } from "@/lib/domain/dates";
+import { addMonths, dmy, sameDayInMonth } from "@/lib/domain/dates";
 import { pendingDate } from "@/lib/domain/finance";
 import { brl } from "@/lib/domain/money";
 import { FIXED_HORIZON_MONTHS, groupAmounts, MAX_INSTALLMENTS, occurrenceDate, periodicityText } from "@/lib/domain/recurrence";
 import { fieldErrors, groupSchema, transactionSchema, type TransactionInput } from "@/lib/domain/schemas";
+import { descriptionSuggestions, type DescriptionSuggestion } from "@/lib/domain/suggestions";
 import { PERIODICITY_LABEL, type PaymentMethod, type Periodicity, type Scope, type Transaction, type TxType } from "@/lib/domain/types";
 import { useReady } from "@/providers/DataProvider";
 import { useToast } from "@/providers/ToastProvider";
 import { CategoryPicker } from "./CategoryPicker";
 import { CreditModePicker, type CreditMode } from "./CreditModePicker";
+import { DescriptionSuggestions } from "./DescriptionSuggestions";
 import { TxTypeToggle } from "./TxTypeToggle";
 
-const METHODS_ALL: [PaymentMethod, string][] = [
+const METHODS: [PaymentMethod, string][] = [
   ["UNSPECIFIED", "A definir"],
   ["PIX", "Pix"],
   ["DEBIT_CARD", "Débito"],
   ["CREDIT_CARD", "Crédito"],
 ];
-const METHODS_KNOWN = METHODS_ALL.slice(1) as [PaymentMethod, string][];
 
 const SCOPES: [Scope, string][] = [
   ["BUSINESS", "💼 Profissional"],
@@ -31,6 +32,29 @@ const SCOPES: [Scope, string][] = [
 ];
 
 const PERIODICITIES = Object.keys(PERIODICITY_LABEL) as Periodicity[];
+
+/** Conta do aviso de saldo: saldo atual, a saída e o saldo previsto (negativos em vermelho). */
+function BalanceWarning({ balance, expense }: { balance: number; expense: number }) {
+  const after = balance - expense;
+  const rows: [string, number, string][] = [
+    ["Saldo total", balance, balance < 0 ? "neg" : ""],
+    ["Despesa", expense, ""],
+    ["Saldo previsto", after, after < 0 ? "neg" : ""],
+  ];
+  return (
+    <>
+      <p className="text-ink-2">Com esta saída, o saldo total das suas contas vai zerar{after < 0 ? " e ficar negativo" : ""}. Deseja salvar mesmo assim?</p>
+      <dl className="panel flex flex-col gap-2 p-4">
+        {rows.map(([label, value, tone], i) => (
+          <div key={label} className={`flex items-baseline justify-between gap-3 ${i === 2 ? "border-t border-line pt-2 font-semibold" : ""}`}>
+            <dt className="text-ink-2">{label}</dt>
+            <dd className={`amt ${tone}`}>{brl(value)}</dd>
+          </div>
+        ))}
+      </dl>
+    </>
+  );
+}
 
 /** Máximo de linhas na prévia das cobranças. */
 const PREVIEW_LIMIT = 6;
@@ -75,6 +99,8 @@ export function TransactionForm({ initialType = "EXPENSE", editing }: Props) {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [confirming, setConfirming] = useState(false);
+  /** Aviso de saldo zerado/negativo aberto: valor da saída e o salvamento a fazer se confirmar. */
+  const [warn, setWarn] = useState<{ expense: number; save: () => void } | null>(null);
   const [busy, setBusy] = useState(false);
 
   const isParcel = !!editing?.installment_group_id;
@@ -101,11 +127,58 @@ export function TransactionForm({ initialType = "EXPENSE", editing }: Props) {
     setMethod(m);
     // Os modos de cobrança só existem com Crédito; ao escolhê-lo, começa em "não recorrente".
     setCreditMode(m === "CREDIT_CARD" ? (creditMode ?? "SINGLE") : null);
+    // Paga/recebida exige a forma conhecida: "A definir" volta o lançamento para pendente.
+    if (m === "UNSPECIFIED" && status === "SETTLED") {
+      setStatus("PENDING");
+      if (type === "EXPENSE" && !refDate) setRefDate(today);
+    }
   }
 
   function changeCreditMode(m: CreditMode) {
     setCreditMode(m);
     setErrors({});
+  }
+
+  // ---- sugestões pelo histórico: repetir um lançamento anterior ----
+  const [suggestOpen, setSuggestOpen] = useState(false);
+  const suggestions = useMemo(
+    () => (editing ? [] : descriptionSuggestions(data.transactions, data.groups, description, type)),
+    [editing, data.transactions, data.groups, description, type],
+  );
+
+  /** Copia os atributos do lançamento anterior; as datas vêm para o mês atual. */
+  function applySuggestion({ description: name, tx, group }: DescriptionSuggestion) {
+    setSuggestOpen(false);
+    setDescription(name);
+    setScope(tx.scope);
+    if (tx.category_id && options.some((c) => c.id === tx.category_id)) setCategoryId(tx.category_id);
+    setErrors({});
+    if (group) {
+      setMethod("CREDIT_CARD");
+      setCreditMode(group.kind);
+      setAmount(group.total_amount);
+      if (group.kind === "FIXED") {
+        setFixedStart(sameDayInMonth(group.first_due_date, today));
+      } else {
+        setAmountMode("TOTAL");
+        setCount(String(group.installment_count ?? 2));
+        setPeriodicity(group.periodicity);
+        setCustomDays(String(group.interval_days ?? 30));
+        setFirstDue(sameDayInMonth(group.first_due_date, addMonths(today, 1)));
+      }
+      return;
+    }
+    setAmount(tx.amount);
+    setMethod(tx.payment_method);
+    setCreditMode(tx.payment_method === "CREDIT_CARD" ? "SINGLE" : null);
+    if (tx.status === "SETTLED") {
+      setStatus("SETTLED");
+      setSettledAt(today);
+    } else {
+      const ref = pendingDate(tx);
+      setStatus("PENDING");
+      setRefDate(ref ? sameDayInMonth(ref, today) : type === "EXPENSE" ? today : "");
+    }
   }
 
   // ---- prévia das cobranças do grupo ----
@@ -190,6 +263,19 @@ export function TransactionForm({ initialType = "EXPENSE", editing }: Props) {
 
     const v = validateSimple();
     if (!v) return;
+    guardBalance(v.amount, () => saveSimple(v));
+  }
+
+  /**
+   * Saída nova que deixaria o saldo total zerado ou negativo: pede confirmação antes de salvar
+   * (qualquer forma de pagamento). Nos outros casos salva direto.
+   */
+  function guardBalance(expense: number, save: () => void) {
+    if (!editing && type === "EXPENSE" && data.balance - expense <= 0) setWarn({ expense, save });
+    else save();
+  }
+
+  async function saveSimple(v: TransactionInput) {
     const row = {
       type: v.type,
       scope: v.scope,
@@ -253,15 +339,26 @@ export function TransactionForm({ initialType = "EXPENSE", editing }: Props) {
 
       <Field label={groupMode ? "Descrição" : "Descrição (opcional)"} error={errors.description}>
         {(id) => (
-          <input
-            id={id}
-            className="field"
-            maxLength={groupMode ? 60 : 80}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder={income ? "Ex.: Atendimento — Ana" : "Ex.: Supermercado do mês"}
-            autoComplete="off"
-          />
+          <DescriptionSuggestions
+            suggestions={suggestions}
+            open={suggestOpen}
+            categoryName={data.categoryName}
+            onPick={applySuggestion}
+            onDismiss={() => setSuggestOpen(false)}
+          >
+            <input
+              id={id}
+              className="field"
+              maxLength={groupMode ? 60 : 80}
+              value={description}
+              onChange={(e) => {
+                setDescription(e.target.value);
+                setSuggestOpen(!editing);
+              }}
+              placeholder={income ? "Ex.: Atendimento — Ana" : "Ex.: Supermercado do mês"}
+              autoComplete="off"
+            />
+          </DescriptionSuggestions>
         )}
       </Field>
 
@@ -276,8 +373,8 @@ export function TransactionForm({ initialType = "EXPENSE", editing }: Props) {
 
       <div>
         <span className="flabel">{payLabel}</span>
-        {/* "A definir" só faz sentido num lançamento simples ainda pendente (não pago e sem cobranças no crédito). */}
-        <Seg label={payLabel} small value={method} onChange={changeMethod} options={status === "PENDING" && !groupMode ? METHODS_ALL : METHODS_KNOWN} />
+        {/* "A definir" fica sempre disponível; escolhê-la torna o lançamento pendente (ver changeMethod). */}
+        <Seg label={payLabel} small value={method} onChange={changeMethod} options={METHODS} />
         {errors.payment_method && <p className="error mt-1.5">{errors.payment_method}</p>}
       </div>
 
@@ -466,12 +563,43 @@ export function TransactionForm({ initialType = "EXPENSE", editing }: Props) {
             {preview.count && preview.count > PREVIEW_LIMIT && <li className="cap">… e mais {preview.count - PREVIEW_LIMIT}</li>}
           </ul>
         )}
-        <button type="button" className="cta" disabled={busy} onClick={confirmGroup}>
+        <button
+          type="button"
+          className="cta"
+          disabled={busy}
+          onClick={() =>
+            guardBalance(groupMode === "INSTALLMENT" ? (preview?.total ?? amount) : amount, () => {
+              setConfirming(false);
+              confirmGroup();
+            })
+          }
+        >
           {groupMode === "FIXED" ? "Criar cobrança fixa" : `Criar ${preview?.count ?? ""} cobranças`}
         </button>
         <button type="button" className="btn-ghost" onClick={() => setConfirming(false)}>
           Voltar e editar
         </button>
+      </Sheet>
+
+      <Sheet open={!!warn} onClose={() => setWarn(null)} title="Seu saldo vai zerar" alert>
+        {warn && <BalanceWarning balance={data.balance} expense={warn.expense} />}
+        <div className="flex gap-3">
+          <button type="button" className="btn-ghost h-12 flex-1" onClick={() => setWarn(null)}>
+            Cancelar
+          </button>
+          <button
+            type="button"
+            className="cta cta-danger h-12 flex-1 text-base"
+            disabled={busy}
+            onClick={() => {
+              const save = warn?.save;
+              setWarn(null);
+              save?.();
+            }}
+          >
+            Salvar
+          </button>
+        </div>
       </Sheet>
     </form>
   );

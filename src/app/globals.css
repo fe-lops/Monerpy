@@ -437,6 +437,19 @@ body {
     opacity: 0.6;
     cursor: progress;
   }
+  /* Ação destrutiva/de alerta: vermelha quando ativa, cinza quando desativada. */
+  .cta-danger {
+    background: var(--expense-solid);
+    color: #fff;
+  }
+  .cta-danger:disabled {
+    background: color-mix(in srgb, var(--text-2) 32%, var(--bg-card));
+    color: color-mix(in srgb, var(--text) 55%, transparent);
+    opacity: 1;
+    cursor: not-allowed;
+    filter: none;
+    transform: none;
+  }
   .btn-ghost {
     height: 48px;
     width: 100%;

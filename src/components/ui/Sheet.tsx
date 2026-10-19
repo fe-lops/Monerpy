@@ -16,10 +16,12 @@ interface SheetProps {
   closeOnBack?: boolean;
   /** Janela menor (até 70% da altura): a tela de trás continua visível, escurecida. */
   compact?: boolean;
+  /** Janela de alerta centralizada também no celular, sem o X (as ações ficam nos botões). */
+  alert?: boolean;
 }
 
 /** Folha inferior modal (padrão do Design System para formulários rápidos). */
-export function Sheet({ open, onClose, title, children, closeOnBack = false, compact = false }: SheetProps) {
+export function Sheet({ open, onClose, title, children, closeOnBack = false, compact = false, alert = false }: SheetProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   // Guarda o onClose mais recente sem reexecutar o efeito abaixo. As telas passam
@@ -60,6 +62,23 @@ export function Sheet({ open, onClose, title, children, closeOnBack = false, com
   }, [open, closeOnBack]);
 
   if (!open) return null;
+  if (alert)
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-5">
+        <div className="anim-fade absolute inset-0" style={{ background: "var(--scrim)" }} onClick={onClose} />
+        <div
+          ref={ref}
+          tabIndex={-1}
+          role="alertdialog"
+          aria-modal="true"
+          aria-label={title}
+          className="anim-fade relative flex max-h-[90dvh] w-full max-w-[440px] flex-col gap-4 overflow-y-auto rounded-3xl border border-line bg-card p-6 shadow-[0_30px_80px_rgb(0_0_0/.45)] outline-none"
+        >
+          <h2 className="font-display text-2xl font-bold">{title}</h2>
+          {children}
+        </div>
+      </div>
+    );
   return (
     // Celular: folha que sobe da base. Computador: modal centralizado.
     <div className="fixed inset-0 z-40 flex items-end justify-center lg:items-center lg:p-6">
